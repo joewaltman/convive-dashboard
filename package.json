@@ -2,6 +2,9 @@
   "name": "convive-dashboard",
   "version": "1.0.0",
   "description": "Con-Vive Guest Dashboard",
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
