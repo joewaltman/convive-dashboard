@@ -3,9 +3,9 @@ import { fetchAllGuests } from '@/lib/db';
 
 export async function GET() {
   try {
-    if (!process.env.DATABASE_URL) {
+    if (!process.env.DATABASE_PUBLIC_URL && !process.env.DATABASE_URL) {
       return NextResponse.json(
-        { error: 'DATABASE_URL not configured' },
+        { error: 'DATABASE_PUBLIC_URL not configured' },
         { status: 500 }
       );
     }
