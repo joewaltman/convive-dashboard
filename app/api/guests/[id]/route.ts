@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchGuest, updateGuest } from '@/lib/airtable';
+import { fetchGuest, updateGuest } from '@/lib/db';
 
 export async function GET(
   request: Request,
@@ -8,9 +8,9 @@ export async function GET(
   try {
     const { id } = await params;
 
-    if (!process.env.AIRTABLE_PAT) {
+    if (!process.env.DATABASE_URL) {
       return NextResponse.json(
-        { error: 'Airtable PAT not configured' },
+        { error: 'DATABASE_URL not configured' },
         { status: 500 }
       );
     }
@@ -33,9 +33,9 @@ export async function PATCH(
   try {
     const { id } = await params;
 
-    if (!process.env.AIRTABLE_PAT) {
+    if (!process.env.DATABASE_URL) {
       return NextResponse.json(
-        { error: 'Airtable PAT not configured' },
+        { error: 'DATABASE_URL not configured' },
         { status: 500 }
       );
     }

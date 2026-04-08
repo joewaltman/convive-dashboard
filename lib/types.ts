@@ -41,11 +41,6 @@ export interface Guest {
   createdTime?: string;
 }
 
-export interface AirtableResponse {
-  records: Guest[];
-  offset?: string;
-}
-
 export interface GuestListItem {
   id: string;
   firstName: string;

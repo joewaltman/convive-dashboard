@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { fetchAllGuests } from '@/lib/airtable';
+import { fetchAllGuests } from '@/lib/db';
 
 export async function GET() {
   try {
-    if (!process.env.AIRTABLE_PAT) {
+    if (!process.env.DATABASE_URL) {
       return NextResponse.json(
-        { error: 'Airtable PAT not configured' },
+        { error: 'DATABASE_URL not configured' },
         { status: 500 }
       );
     }
