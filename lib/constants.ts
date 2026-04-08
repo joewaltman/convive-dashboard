@@ -1,8 +1,3 @@
-// Airtable configuration
-export const AIRTABLE_BASE_ID = 'appgZoPBry2SBKP6Y';
-export const AIRTABLE_TABLE_ID = 'tbl9xJScvbQMrGUTh';
-export const AIRTABLE_API_URL = 'https://api.airtable.com/v0';
-
 // Funnel Stage options with colors
 export const FUNNEL_STAGES = [
   { value: 'Partial', color: '#9CA3AF' },        // gray
