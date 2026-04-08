@@ -1,11 +1,12 @@
 import { Pool } from 'pg';
 import type { Guest, GuestFields } from './types';
 
+const dbUrl = process.env.DATABASE_URL || '';
+const isInternal = dbUrl.includes('localhost') || dbUrl.includes('.railway.internal');
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('localhost')
-    ? false
-    : { rejectUnauthorized: false },
+  connectionString: dbUrl,
+  ssl: isInternal ? false : { rejectUnauthorized: false },
 });
 
 const GUEST_QUERY = `
