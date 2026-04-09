@@ -1,17 +1,35 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState } from 'react';
+import useSWR from 'swr';
+import { COLORS } from '@/lib/constants';
 
-const navItems = [
-  { name: 'Guests', href: '/', active: true },
-  { name: 'Dinners', href: '#', active: false, placeholder: true },
-  { name: 'Hosts', href: '#', active: false, placeholder: true },
-];
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function Sidebar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [loggingOut, setLoggingOut] = useState(false);
+
+  // Fetch attention count for badge
+  const { data: attentionData } = useSWR<{ count: number }>(
+    '/api/attention/count',
+    fetcher,
+    {
+      refreshInterval: 60000, // Poll every 60 seconds
+      revalidateOnFocus: false,
+    }
+  );
+
+  const attentionCount = attentionData?.count ?? 0;
+
+  const navItems = [
+    { name: 'Guests', shortName: 'G', href: '/', active: pathname === '/' },
+    { name: 'Needs Attention', shortName: '!', href: '/attention', active: pathname === '/attention', badge: attentionCount },
+    { name: 'Dinners', shortName: 'D', href: '#', active: false, placeholder: true },
+    { name: 'Hosts', shortName: 'H', href: '#', active: false, placeholder: true },
+  ];
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -41,7 +59,7 @@ export default function Sidebar() {
             key={item.name}
             href={item.href}
             className={`
-              flex items-center px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
+              flex items-center justify-between px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
               ${item.active
                 ? 'bg-terracotta/10 text-terracotta'
                 : item.placeholder
@@ -53,8 +71,16 @@ export default function Sidebar() {
           >
             <span className="hidden lg:inline">{item.name}</span>
             <span className="lg:hidden text-center w-full">
-              {item.name.charAt(0)}
+              {item.shortName}
             </span>
+            {item.badge !== undefined && item.badge > 0 && (
+              <span
+                className="hidden lg:inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-white rounded-full"
+                style={{ backgroundColor: COLORS.terracotta }}
+              >
+                {item.badge > 99 ? '99+' : item.badge}
+              </span>
+            )}
           </a>
         ))}
       </nav>

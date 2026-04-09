@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Guest, GuestFields } from '@/lib/types';
+import type { Guest, GuestFields, Message } from '@/lib/types';
 import {
   FUNNEL_STAGE_OPTIONS,
   AGE_RANGE_OPTIONS,
@@ -11,6 +11,8 @@ import {
   HOSTING_INTEREST_OPTIONS,
 } from '@/lib/constants';
 import Badge from './Badge';
+import MessageThread from './MessageThread';
+import MessageCompose from './MessageCompose';
 
 interface GuestDetailProps {
   guest: Guest;
@@ -24,6 +26,7 @@ type FieldKey = keyof GuestFields;
 export default function GuestDetail({ guest, onSave, onBack, showBackButton }: GuestDetailProps) {
   const [editedFields, setEditedFields] = useState<Partial<GuestFields>>({});
   const [saving, setSaving] = useState(false);
+  const [optimisticMessage, setOptimisticMessage] = useState<Message | null>(null);
 
   // Reset edited fields when guest changes
   useEffect(() => {
@@ -337,6 +340,21 @@ export default function GuestDetail({ guest, onSave, onBack, showBackButton }: G
               className={inputClass('Summarized Transcript')}
             />
           </Field>
+        </Section>
+
+        {/* Messages Section */}
+        <Section title="Messages">
+          <MessageThread
+            guestId={guest.id}
+            optimisticMessage={optimisticMessage}
+          />
+          <div className="mt-4">
+            <MessageCompose
+              guestId={guest.id}
+              routingStatus={guest.fields['Routing Status']}
+              onOptimisticMessage={setOptimisticMessage}
+            />
+          </div>
         </Section>
       </div>
 

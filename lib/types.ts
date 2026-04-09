@@ -33,6 +33,10 @@ export interface GuestFields {
 
   // System
   'Created Time'?: string;
+  'Routing Status'?: string | null;
+  'Last Replied At'?: string | null;
+  'Last Message Sent At'?: string | null;
+  'Sequence Completed'?: boolean;
 }
 
 export interface Guest {
@@ -48,4 +52,40 @@ export interface GuestListItem {
   funnelStage: string;
   ageRange: string;
   createdTime: string;
+}
+
+// Message types
+export interface Message {
+  id: number;
+  guest_id: number;
+  direction: 'inbound' | 'outbound';
+  body: string;
+  sent_at: string;
+  delivered: boolean;
+  message_type: string | null;
+  sequence_step: number | null;
+  flagged: boolean;
+  flagged_reason: string | null;
+}
+
+// Attention Queue types
+export type AttentionCategory =
+  | 'unrouted_reply'
+  | 'needs_manual_response'
+  | 'sequence_complete_no_response'
+  | 'yellow_no_call';
+
+export interface AttentionQueueItem {
+  guest: Guest;
+  category: AttentionCategory;
+  lastMessage?: string;
+  lastActivityAt: string;
+}
+
+export interface AttentionQueueData {
+  unroutedReply: AttentionQueueItem[];
+  needsManualResponse: AttentionQueueItem[];
+  sequenceCompleteNoResponse: AttentionQueueItem[];
+  yellowNoCall: AttentionQueueItem[];
+  totalCount: number;
 }
