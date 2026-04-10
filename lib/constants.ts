@@ -82,14 +82,6 @@ export const COLORS = {
 export const AUTH_COOKIE_NAME = 'convive-auth';
 export const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days in seconds
 
-// Attention Queue Categories
-export const ATTENTION_CATEGORIES = {
-  unrouted_reply: { label: 'Replied - Unrouted', color: '#EF4444', priority: 1 },
-  needs_manual_response: { label: 'Needs Manual Reply', color: '#F59E0B', priority: 2 },
-  sequence_complete_no_response: { label: 'No Response', color: '#3B82F6', priority: 3 },
-  yellow_no_call: { label: 'Call Pending', color: '#8B5CF6', priority: 4 },
-} as const;
-
 // Routing Status Options
 export const ROUTING_STATUS_OPTIONS = ['green', 'yellow', 'red', 'deprioritized'] as const;
 export type RoutingStatus = typeof ROUTING_STATUS_OPTIONS[number];

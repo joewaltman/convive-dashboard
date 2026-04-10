@@ -5,49 +5,10 @@ import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import Sidebar from '@/components/Sidebar';
 import AttentionCard from '@/components/AttentionCard';
-import type { AttentionQueueData, AttentionQueueItem } from '@/lib/types';
-import { ATTENTION_CATEGORIES, COLORS } from '@/lib/constants';
+import type { AttentionQueueData } from '@/lib/types';
+import { COLORS } from '@/lib/constants';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
-
-interface CategorySectionProps {
-  title: string;
-  color: string;
-  items: AttentionQueueItem[];
-  onRoute: (guestId: number, status: string) => Promise<void>;
-  onViewGuest: (guestId: string) => void;
-}
-
-function CategorySection({ title, color, items, onRoute, onViewGuest }: CategorySectionProps) {
-  if (items.length === 0) return null;
-
-  return (
-    <div className="mb-8">
-      <div className="flex items-center gap-2 mb-4">
-        <div
-          className="w-3 h-3 rounded-full"
-          style={{ backgroundColor: color }}
-        />
-        <h2 className="text-lg font-semibold text-gray-900">
-          {title}
-        </h2>
-        <span className="px-2 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-full">
-          {items.length}
-        </span>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {items.map((item) => (
-          <AttentionCard
-            key={item.guest.id}
-            item={item}
-            onRoute={onRoute}
-            onViewGuest={onViewGuest}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export default function AttentionPage() {
   const router = useRouter();
@@ -89,56 +50,26 @@ export default function AttentionPage() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Needs Attention
+              New Sign-ups
             </h1>
             {data && (
               <p className="text-gray-600">
-                {data.totalCount} {data.totalCount === 1 ? 'guest' : 'guests'} need attention
+                {data.totalCount} {data.totalCount === 1 ? 'guest' : 'guests'} need initial triage
               </p>
             )}
           </div>
 
-          {/* Summary Cards */}
-          {data && data.totalCount > 0 && (
-            <div className="grid gap-4 grid-cols-2 md:grid-cols-4 mb-8">
-              <div className="p-4 bg-red-50 border border-red-100 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">
-                  {data.unroutedReply.length}
-                </div>
-                <div className="text-sm text-red-700">Unrouted Replies</div>
-              </div>
-              <div className="p-4 bg-amber-50 border border-amber-100 rounded-lg">
-                <div className="text-2xl font-bold text-amber-600">
-                  {data.needsManualResponse.length}
-                </div>
-                <div className="text-sm text-amber-700">Need Manual Reply</div>
-              </div>
-              <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">
-                  {data.sequenceCompleteNoResponse.length}
-                </div>
-                <div className="text-sm text-blue-700">No Response</div>
-              </div>
-              <div className="p-4 bg-purple-50 border border-purple-100 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">
-                  {data.yellowNoCall.length}
-                </div>
-                <div className="text-sm text-purple-700">Call Pending</div>
-              </div>
-            </div>
-          )}
-
           {/* Loading State */}
           {isLoading && (
             <div className="flex items-center justify-center h-64">
-              <div className="text-gray-500">Loading attention queue...</div>
+              <div className="text-gray-500">Loading new sign-ups...</div>
             </div>
           )}
 
           {/* Error State */}
           {error && (
             <div className="flex items-center justify-center h-64">
-              <div className="text-red-500">Failed to load attention queue</div>
+              <div className="text-red-500">Failed to load new sign-ups</div>
             </div>
           )}
 
@@ -165,42 +96,22 @@ export default function AttentionPage() {
                 </svg>
               </div>
               <p className="text-lg font-medium text-gray-900 mb-1">All caught up!</p>
-              <p className="text-gray-500">No guests need attention right now.</p>
+              <p className="text-gray-500">No new sign-ups need triage right now.</p>
             </div>
           )}
 
-          {/* Category Sections */}
+          {/* New Sign-ups List */}
           {data && data.totalCount > 0 && (
-            <>
-              <CategorySection
-                title="Replied - Unrouted"
-                color={ATTENTION_CATEGORIES.unrouted_reply.color}
-                items={data.unroutedReply}
-                onRoute={handleRoute}
-                onViewGuest={handleViewGuest}
-              />
-              <CategorySection
-                title="Needs Manual Reply"
-                color={ATTENTION_CATEGORIES.needs_manual_response.color}
-                items={data.needsManualResponse}
-                onRoute={handleRoute}
-                onViewGuest={handleViewGuest}
-              />
-              <CategorySection
-                title="No Response"
-                color={ATTENTION_CATEGORIES.sequence_complete_no_response.color}
-                items={data.sequenceCompleteNoResponse}
-                onRoute={handleRoute}
-                onViewGuest={handleViewGuest}
-              />
-              <CategorySection
-                title="Call Pending"
-                color={ATTENTION_CATEGORIES.yellow_no_call.color}
-                items={data.yellowNoCall}
-                onRoute={handleRoute}
-                onViewGuest={handleViewGuest}
-              />
-            </>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {data.newSignups.map((item) => (
+                <AttentionCard
+                  key={item.guest.id}
+                  item={item}
+                  onRoute={handleRoute}
+                  onViewGuest={handleViewGuest}
+                />
+              ))}
+            </div>
           )}
         </div>
       </main>

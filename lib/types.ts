@@ -69,23 +69,12 @@ export interface Message {
 }
 
 // Attention Queue types
-export type AttentionCategory =
-  | 'unrouted_reply'
-  | 'needs_manual_response'
-  | 'sequence_complete_no_response'
-  | 'yellow_no_call';
-
 export interface AttentionQueueItem {
   guest: Guest;
-  category: AttentionCategory;
-  lastMessage?: string;
   lastActivityAt: string;
 }
 
 export interface AttentionQueueData {
-  unroutedReply: AttentionQueueItem[];
-  needsManualResponse: AttentionQueueItem[];
-  sequenceCompleteNoResponse: AttentionQueueItem[];
-  yellowNoCall: AttentionQueueItem[];
+  newSignups: AttentionQueueItem[];
   totalCount: number;
 }

@@ -45,114 +45,39 @@ function rowToGuest(row: Record<string, unknown>): Guest {
   };
 }
 
-// Category 1: Replied - Unrouted
-async function fetchUnroutedReply(): Promise<AttentionQueueItem[]> {
-  const result = await pool.query(`
-    SELECT g.*, m.body as last_message, m.sent_at as last_message_at
-    FROM guests g
-    JOIN messages m ON m.guest_id = g.id AND m.flagged = true AND m.flagged_reason = 'unrouted_reply'
-    ORDER BY g.last_replied_at DESC
-  `);
-
-  return result.rows.map(row => ({
-    guest: rowToGuest(row),
-    category: 'unrouted_reply' as const,
-    lastMessage: row.last_message ? String(row.last_message) : undefined,
-    lastActivityAt: row.last_replied_at
-      ? new Date(row.last_replied_at as string).toISOString()
-      : new Date().toISOString(),
-  }));
-}
-
-// Category 2: Needs Manual Reply
-async function fetchNeedsManualResponse(): Promise<AttentionQueueItem[]> {
-  const result = await pool.query(`
-    SELECT g.*, m.body as last_message, m.sent_at as last_message_at
-    FROM guests g
-    JOIN messages m ON m.guest_id = g.id AND m.flagged = true AND m.flagged_reason = 'needs_manual_response'
-    ORDER BY g.last_replied_at ASC
-  `);
-
-  return result.rows.map(row => ({
-    guest: rowToGuest(row),
-    category: 'needs_manual_response' as const,
-    lastMessage: row.last_message ? String(row.last_message) : undefined,
-    lastActivityAt: row.last_replied_at
-      ? new Date(row.last_replied_at as string).toISOString()
-      : new Date().toISOString(),
-  }));
-}
-
-// Category 3: Sequence Complete - No Response
-async function fetchSequenceCompleteNoResponse(): Promise<AttentionQueueItem[]> {
+// Fetch new sign-ups that need initial triage (exclude legacy data before Apr 10, 2026)
+async function fetchNewSignups(): Promise<AttentionQueueItem[]> {
   const result = await pool.query(`
     SELECT g.*
     FROM guests g
-    WHERE g.sequence_completed = true AND g.last_replied_at IS NULL
-      AND NOT EXISTS (
-        SELECT 1 FROM messages m
-        WHERE m.guest_id = g.id AND m.flagged = true AND m.flagged_reason = 'unrouted_reply'
-      )
-    ORDER BY g.last_message_sent_at ASC
+    WHERE g.routing_status IS NULL
+      AND g.created_at >= '2026-04-10'
+    ORDER BY g.created_at DESC
   `);
 
   return result.rows.map(row => ({
     guest: rowToGuest(row),
-    category: 'sequence_complete_no_response' as const,
-    lastActivityAt: row.last_message_sent_at
-      ? new Date(row.last_message_sent_at as string).toISOString()
-      : new Date().toISOString(),
-  }));
-}
-
-// Category 4: Yellow - Call Not Scheduled
-async function fetchYellowNoCall(): Promise<AttentionQueueItem[]> {
-  const result = await pool.query(`
-    SELECT g.*
-    FROM guests g
-    WHERE g.routing_status = 'yellow' AND (g.call_complete IS NULL OR g.call_complete = false)
-    ORDER BY g.last_replied_at ASC
-  `);
-
-  return result.rows.map(row => ({
-    guest: rowToGuest(row),
-    category: 'yellow_no_call' as const,
-    lastActivityAt: row.last_replied_at
-      ? new Date(row.last_replied_at as string).toISOString()
+    lastActivityAt: row.created_at
+      ? new Date(row.created_at as string).toISOString()
       : new Date().toISOString(),
   }));
 }
 
 export async function fetchAttentionQueue(): Promise<AttentionQueueData> {
-  const [unroutedReply, needsManualResponse, sequenceCompleteNoResponse, yellowNoCall] = await Promise.all([
-    fetchUnroutedReply(),
-    fetchNeedsManualResponse(),
-    fetchSequenceCompleteNoResponse(),
-    fetchYellowNoCall(),
-  ]);
+  const newSignups = await fetchNewSignups();
 
   return {
-    unroutedReply,
-    needsManualResponse,
-    sequenceCompleteNoResponse,
-    yellowNoCall,
-    totalCount:
-      unroutedReply.length +
-      needsManualResponse.length +
-      sequenceCompleteNoResponse.length +
-      yellowNoCall.length,
+    newSignups,
+    totalCount: newSignups.length,
   };
 }
 
 export async function fetchAttentionCount(): Promise<number> {
   const result = await pool.query(`
-    SELECT
-      (SELECT COUNT(*) FROM messages WHERE flagged = true AND flagged_reason = 'unrouted_reply') +
-      (SELECT COUNT(*) FROM messages WHERE flagged = true AND flagged_reason = 'needs_manual_response') +
-      (SELECT COUNT(*) FROM guests g WHERE g.sequence_completed = true AND g.last_replied_at IS NULL
-        AND NOT EXISTS (SELECT 1 FROM messages m WHERE m.guest_id = g.id AND m.flagged = true AND m.flagged_reason = 'unrouted_reply')) +
-      (SELECT COUNT(*) FROM guests WHERE routing_status = 'yellow' AND (call_complete IS NULL OR call_complete = false))
-      AS total
+    SELECT COUNT(*) AS total
+    FROM guests g
+    WHERE g.routing_status IS NULL
+      AND g.created_at >= '2026-04-10'
   `);
 
   return Number(result.rows[0]?.total ?? 0);
