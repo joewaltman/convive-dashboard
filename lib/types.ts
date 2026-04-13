@@ -37,6 +37,8 @@ export interface GuestFields {
   'Last Replied At'?: string | null;
   'Last Message Sent At'?: string | null;
   'Sequence Completed'?: boolean;
+  'Sequence Paused'?: boolean;
+  'Sequence Step'?: number | null;
 }
 
 export interface Guest {

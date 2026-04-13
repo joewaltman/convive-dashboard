@@ -38,6 +38,20 @@ export default function AttentionPage() {
     mutate();
   }, [mutate]);
 
+  const handleUnpause = useCallback(async (guestId: number) => {
+    const response = await fetch(`/api/guests/${guestId}/unpause`, {
+      method: 'POST',
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Failed to unpause sequence');
+    }
+
+    // Revalidate the queue
+    mutate();
+  }, [mutate]);
+
   const handleViewGuest = useCallback((guestId: string) => {
     router.push(`/?guest=${guestId}`);
   }, [router]);
@@ -108,6 +122,7 @@ export default function AttentionPage() {
                   key={item.guest.id}
                   item={item}
                   onRoute={handleRoute}
+                  onUnpause={handleUnpause}
                   onViewGuest={handleViewGuest}
                 />
               ))}

@@ -37,6 +37,8 @@ function rowToGuest(row: Record<string, unknown>): Guest {
   if (row.last_replied_at != null) fields['Last Replied At'] = new Date(row.last_replied_at as string).toISOString();
   if (row.last_message_sent_at != null) fields['Last Message Sent At'] = new Date(row.last_message_sent_at as string).toISOString();
   if (row.sequence_completed != null) fields['Sequence Completed'] = Boolean(row.sequence_completed);
+  if (row.sequence_paused != null) fields['Sequence Paused'] = Boolean(row.sequence_paused);
+  if (row.sequence_step != null) fields['Sequence Step'] = Number(row.sequence_step);
 
   return {
     id: String(row.id),
@@ -103,6 +105,13 @@ export async function routeGuest(guestId: number, status: string): Promise<void>
   // Clear all flagged messages for this guest
   await pool.query(
     `UPDATE messages SET flagged = false WHERE guest_id = $1`,
+    [guestId]
+  );
+}
+
+export async function unpauseGuest(guestId: number): Promise<void> {
+  await pool.query(
+    `UPDATE guests SET sequence_paused = FALSE, updated_at = NOW() WHERE id = $1`,
     [guestId]
   );
 }
