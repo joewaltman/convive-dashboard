@@ -30,8 +30,13 @@ async function runApifyScraper(url: string, platform: Platform): Promise<unknown
   }
 
   const actorId = platform === 'linkedin'
-    ? 'apify~linkedin-profile-scraper'
-    : 'apify~instagram-profile-scraper';
+    ? 'bebity~linkedin-profile-scraper'
+    : 'apify~instagram-scraper';
+
+  // Build input based on platform (different actors expect different schemas)
+  const input = platform === 'linkedin'
+    ? { startUrls: [{ url }] }
+    : { directUrls: [url], resultsType: 'details' };
 
   // Start the actor run
   const startResponse = await fetch(
@@ -39,9 +44,7 @@ async function runApifyScraper(url: string, platform: Platform): Promise<unknown
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        startUrls: [{ url }],
-      }),
+      body: JSON.stringify(input),
     }
   );
 
