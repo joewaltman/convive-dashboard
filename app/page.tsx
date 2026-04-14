@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { mutate } from 'swr';
 import Sidebar from '@/components/Sidebar';
 import GuestList from '@/components/GuestList';
@@ -14,10 +15,24 @@ interface ToastState {
 }
 
 export default function DashboardPage() {
+  const searchParams = useSearchParams();
+  const guestIdFromUrl = searchParams.get('guest');
+
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [allGuests, setAllGuests] = useState<Guest[]>([]);
   const [toast, setToast] = useState<ToastState | null>(null);
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
+
+  // Auto-select guest from URL parameter when guests are loaded
+  useEffect(() => {
+    if (guestIdFromUrl && allGuests.length > 0 && !selectedGuest) {
+      const guest = allGuests.find(g => g.id === guestIdFromUrl);
+      if (guest) {
+        setSelectedGuest(guest);
+        setMobileShowDetail(true);
+      }
+    }
+  }, [guestIdFromUrl, allGuests, selectedGuest]);
 
   const handleGuestSelect = useCallback((guest: Guest) => {
     setSelectedGuest(guest);
