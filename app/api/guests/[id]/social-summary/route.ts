@@ -36,14 +36,12 @@ async function runApifyScraper(url: string, platform: Platform): Promise<unknown
   // Build input based on platform (different actors expect different schemas)
   let input;
   if (platform === 'linkedin') {
+    input = { profileUrls: [url] };
+    // Add cookie if provided via env var
     const linkedinCookie = process.env.LINKEDIN_COOKIE;
-    if (!linkedinCookie) {
-      throw new Error('LINKEDIN_COOKIE not configured - required for LinkedIn scraping');
+    if (linkedinCookie) {
+      input = { ...input, cookie: linkedinCookie };
     }
-    input = {
-      profileUrls: [url],
-      cookie: linkedinCookie,
-    };
   } else {
     input = { directUrls: [url], resultsType: 'details' };
   }
