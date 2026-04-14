@@ -34,9 +34,19 @@ async function runApifyScraper(url: string, platform: Platform): Promise<unknown
     : 'apify~instagram-scraper';
 
   // Build input based on platform (different actors expect different schemas)
-  const input = platform === 'linkedin'
-    ? { profileUrls: [url] }
-    : { directUrls: [url], resultsType: 'details' };
+  let input;
+  if (platform === 'linkedin') {
+    const linkedinCookie = process.env.LINKEDIN_COOKIE;
+    if (!linkedinCookie) {
+      throw new Error('LINKEDIN_COOKIE not configured - required for LinkedIn scraping');
+    }
+    input = {
+      profileUrls: [url],
+      cookie: linkedinCookie,
+    };
+  } else {
+    input = { directUrls: [url], resultsType: 'details' };
+  }
 
   // Start the actor run
   const startResponse = await fetch(
