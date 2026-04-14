@@ -30,8 +30,8 @@ async function runApifyScraper(url: string, platform: Platform): Promise<unknown
   }
 
   const actorId = platform === 'linkedin'
-    ? 'apify/linkedin-profile-scraper'
-    : 'apify/instagram-profile-scraper';
+    ? 'apify~linkedin-profile-scraper'
+    : 'apify~instagram-profile-scraper';
 
   // Start the actor run
   const startResponse = await fetch(
