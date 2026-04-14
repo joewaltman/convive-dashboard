@@ -85,3 +85,26 @@ export const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days in seconds
 // Routing Status Options
 export const ROUTING_STATUS_OPTIONS = ['green', 'yellow', 'red', 'deprioritized'] as const;
 export type RoutingStatus = typeof ROUTING_STATUS_OPTIONS[number];
+
+// Invitation Response Options
+export const INVITATION_RESPONSE_OPTIONS = [
+  { value: 'Accepted', label: 'Accepted', color: '#22C55E' },
+  { value: 'Declined', label: 'Declined', color: '#EF4444' },
+  { value: 'Invited', label: 'Invited', color: '#F59E0B' },
+  { value: null, label: 'No Response', color: '#9CA3AF' },
+] as const;
+
+// Bring Item Categories
+export const BRING_ITEM_CATEGORIES = [
+  'Wine',
+  'Appetizer',
+  'Dessert',
+  'Salad',
+  'Side Dish',
+  'Other',
+] as const;
+
+// Dinner Defaults
+export const DEFAULT_START_TIME = '18:00';
+export const DEFAULT_GUEST_COUNT = 7;
+export const DEFAULT_MAX_GUESTS = 8;

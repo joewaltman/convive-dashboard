@@ -96,3 +96,82 @@ export interface AttentionQueueData {
   items: AttentionQueueItem[];
   totalCount: number;
 }
+
+// Host types
+export interface HostFields {
+  'First Name'?: string;
+  'Last Name'?: string;
+  'Phone'?: string;
+  'Email'?: string;
+  'Address'?: string;
+  'City'?: string;
+  'Notes'?: string;
+  'Max Guests'?: number;
+  'Guest ID'?: number | null;
+  'Active'?: boolean;
+  'Created Time'?: string;
+}
+
+export interface Host {
+  id: string;
+  fields: HostFields;
+  dinnerCount?: number;
+  linkedGuest?: Guest | null;
+}
+
+// Dinner types
+export interface DinnerFields {
+  'Dinner Name'?: string;
+  'Dinner Date'?: string;
+  'Start Time'?: string;
+  'Host ID'?: number | null;
+  'Host'?: string; // legacy text field
+  'Location'?: string;
+  'Guest Count'?: number;
+  'Menu'?: string;
+  'Notes'?: string;
+  'Created Time'?: string;
+}
+
+export interface Dinner {
+  id: string;
+  fields: DinnerFields;
+  host?: Host | null;
+  invitations?: Invitation[];
+  bringItems?: BringItem[];
+  confirmedCount?: number;
+}
+
+// Invitation types
+export type InvitationResponse = 'Accepted' | 'Declined' | 'Invited' | null;
+
+export interface Invitation {
+  id: number;
+  guestId: number;
+  dinnerId: number;
+  guestName: string;
+  phone: string | null;
+  inviteSentDate: string | null;
+  response: InvitationResponse;
+  responseDate: string | null;
+  notes: string | null;
+  guest?: Guest;
+}
+
+// Bring item types
+export interface BringItem {
+  id: number;
+  dinnerId: number;
+  category: string;
+  description: string | null;
+  slots: number;
+  claims: BringItemClaim[];
+}
+
+export interface BringItemClaim {
+  id: number;
+  bringItemId: number;
+  guestId: number;
+  claimedAt: string;
+  guest?: Guest;
+}

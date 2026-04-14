@@ -27,8 +27,8 @@ export default function Sidebar() {
   const navItems = [
     { name: 'Guests', shortName: 'G', href: '/', active: pathname === '/' },
     { name: 'Needs Attention', shortName: '!', href: '/attention', active: pathname === '/attention', badge: attentionCount },
-    { name: 'Dinners', shortName: 'D', href: '#', active: false, placeholder: true },
-    { name: 'Hosts', shortName: 'H', href: '#', active: false, placeholder: true },
+    { name: 'Dinners', shortName: 'D', href: '/dinners', active: pathname.startsWith('/dinners') },
+    { name: 'Hosts', shortName: 'H', href: '/hosts', active: pathname === '/hosts' },
   ];
 
   const handleLogout = async () => {
@@ -62,12 +62,9 @@ export default function Sidebar() {
               flex items-center justify-between px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
               ${item.active
                 ? 'bg-terracotta/10 text-terracotta'
-                : item.placeholder
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-gray-700 hover:bg-gray-100'
+                : 'text-gray-700 hover:bg-gray-100'
               }
             `}
-            onClick={item.placeholder ? (e) => e.preventDefault() : undefined}
           >
             <span className="hidden lg:inline">{item.name}</span>
             <span className="lg:hidden text-center w-full">
