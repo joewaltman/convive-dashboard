@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { routeGuest } from '@/lib/attention';
-import { ROUTING_STATUS_OPTIONS } from '@/lib/constants';
+import { archiveGuest } from '@/lib/attention';
 
 export async function POST(
   request: Request,
@@ -24,23 +23,13 @@ export async function POST(
       );
     }
 
-    const body = await request.json();
-    const { status } = body;
+    await archiveGuest(guestId);
 
-    if (!status || !ROUTING_STATUS_OPTIONS.includes(status)) {
-      return NextResponse.json(
-        { error: 'Valid routing status is required (green, yellow, red, deprioritized)' },
-        { status: 400 }
-      );
-    }
-
-    await routeGuest(guestId, status);
-
-    return NextResponse.json({ success: true, status });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error routing guest:', error);
+    console.error('Error archiving guest:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to route guest' },
+      { error: error instanceof Error ? error.message : 'Failed to archive guest' },
       { status: 500 }
     );
   }

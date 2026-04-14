@@ -39,6 +39,7 @@ export interface GuestFields {
   'Sequence Completed'?: boolean;
   'Sequence Paused'?: boolean;
   'Sequence Step'?: number | null;
+  'Attention Archived At'?: string | null;
 
   // Social Enrichment
   'Social Summary'?: {
@@ -87,9 +88,11 @@ export interface Message {
 export interface AttentionQueueItem {
   guest: Guest;
   lastActivityAt: string;
+  lastInboundAt?: string;
+  lastInboundMessage?: string;
 }
 
 export interface AttentionQueueData {
-  newSignups: AttentionQueueItem[];
+  items: AttentionQueueItem[];
   totalCount: number;
 }

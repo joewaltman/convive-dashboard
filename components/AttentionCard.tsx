@@ -3,135 +3,128 @@
 import { useState, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import type { AttentionQueueItem } from '@/lib/types';
+import ApproveModal from './ApproveModal';
 
 interface AttentionCardProps {
   item: AttentionQueueItem;
-  onRoute: (guestId: number, status: string) => Promise<void>;
-  onUnpause: (guestId: number) => Promise<void>;
+  onApprove: (guestId: number, message: string) => Promise<void>;
+  onArchive: (guestId: number) => Promise<void>;
+  onReject: (guestId: number) => Promise<void>;
   onViewGuest?: (guestId: string) => void;
 }
 
-export default function AttentionCard({ item, onRoute, onUnpause, onViewGuest }: AttentionCardProps) {
-  const [routing, setRouting] = useState<string | null>(null);
-  const [unpausing, setUnpausing] = useState(false);
+export default function AttentionCard({ item, onApprove, onArchive, onReject, onViewGuest }: AttentionCardProps) {
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
 
-  const { guest, lastActivityAt } = item;
+  const { guest, lastInboundAt, lastInboundMessage } = item;
 
   const fullName = [guest.fields['First Name'], guest.fields['Last Name']].filter(Boolean).join(' ') || 'Unknown';
+  const firstName = guest.fields['First Name'] || 'Guest';
   const ageRange = guest.fields['Age Range'] || '';
-  const curiousAbout = guest.fields['Curious About'] || '';
-  const funnelStage = guest.fields['Funnel Stage'] || '';
-  const sequencePaused = guest.fields['Sequence Paused'] || false;
-  const sequenceStep = guest.fields['Sequence Step'];
 
-  const timeAgo = lastActivityAt
-    ? formatDistanceToNow(new Date(lastActivityAt), { addSuffix: true })
+  const timeAgo = lastInboundAt
+    ? formatDistanceToNow(new Date(lastInboundAt), { addSuffix: true })
     : '';
 
-  const handleRoute = useCallback(async (status: string) => {
-    setRouting(status);
-    try {
-      await onRoute(parseInt(guest.id, 10), status);
-    } catch (error) {
-      console.error('Error routing guest:', error);
-    } finally {
-      setRouting(null);
-    }
-  }, [guest.id, onRoute]);
+  const handleApprove = useCallback(async (message: string) => {
+    await onApprove(parseInt(guest.id, 10), message);
+  }, [guest.id, onApprove]);
 
-  const handleUnpause = useCallback(async () => {
-    setUnpausing(true);
+  const handleArchive = useCallback(async () => {
+    setArchiving(true);
     try {
-      await onUnpause(parseInt(guest.id, 10));
+      await onArchive(parseInt(guest.id, 10));
     } catch (error) {
-      console.error('Error unpausing sequence:', error);
-    } finally {
-      setUnpausing(false);
+      console.error('Error archiving guest:', error);
+      setArchiving(false);
     }
-  }, [guest.id, onUnpause]);
+  }, [guest.id, onArchive]);
+
+  const handleReject = useCallback(async () => {
+    setRejecting(true);
+    try {
+      await onReject(parseInt(guest.id, 10));
+    } catch (error) {
+      console.error('Error rejecting guest:', error);
+      setRejecting(false);
+    }
+  }, [guest.id, onReject]);
 
   const handleViewGuest = useCallback(() => {
     onViewGuest?.(guest.id);
   }, [guest.id, onViewGuest]);
 
+  const isProcessing = archiving || rejecting;
+
   return (
-    <div className="p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <button
-              onClick={handleViewGuest}
-              className="font-medium text-terracotta hover:underline truncate text-left"
-            >
-              {fullName}
-            </button>
-            {ageRange && (
-              <span className="text-sm text-gray-500">{ageRange}</span>
+    <>
+      <div className={`p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow ${isProcessing ? 'opacity-50' : ''}`}>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <button
+                onClick={handleViewGuest}
+                className="font-medium text-terracotta hover:underline truncate text-left"
+              >
+                {fullName}
+              </button>
+              {ageRange && (
+                <span className="text-sm text-gray-500">{ageRange}</span>
+              )}
+            </div>
+            {timeAgo && (
+              <div className="text-xs text-gray-500">
+                {timeAgo}
+              </div>
             )}
           </div>
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            {funnelStage && (
-              <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                {funnelStage}
-              </span>
-            )}
-            {sequenceStep != null && (
-              <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-600">
-                Step {sequenceStep}/4
-              </span>
-            )}
-            {sequencePaused && (
-              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-600">
-                Paused
-              </span>
-            )}
-            {timeAgo && <span>{timeAgo}</span>}
+        </div>
+
+        {lastInboundMessage && (
+          <div className="mb-3 p-2 bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-700 line-clamp-3">
+              {lastInboundMessage}
+            </p>
           </div>
-        </div>
-      </div>
-
-      {curiousAbout && (
-        <div className="mb-3 text-sm text-gray-600">
-          <span className="text-xs text-gray-500 block mb-1">Curious about:</span>
-          <span className="line-clamp-2">{curiousAbout}</span>
-        </div>
-      )}
-
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => handleRoute('green')}
-          disabled={routing !== null || unpausing}
-          className="px-3 py-1.5 text-xs font-medium text-white bg-green-500 rounded hover:bg-green-600 disabled:opacity-50 transition-colors"
-        >
-          {routing === 'green' ? 'Routing...' : 'Mark Green'}
-        </button>
-
-        <button
-          onClick={() => handleRoute('yellow')}
-          disabled={routing !== null || unpausing}
-          className="px-3 py-1.5 text-xs font-medium text-yellow-700 bg-yellow-100 rounded hover:bg-yellow-200 disabled:opacity-50 transition-colors"
-        >
-          {routing === 'yellow' ? 'Routing...' : 'Mark Yellow'}
-        </button>
-
-        <button
-          onClick={() => handleRoute('deprioritized')}
-          disabled={routing !== null || unpausing}
-          className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 transition-colors"
-        >
-          {routing === 'deprioritized' ? 'Routing...' : 'Deprioritize'}
-        </button>
-
-        {sequencePaused && (
-          <button
-            onClick={handleUnpause}
-            disabled={routing !== null || unpausing}
-            className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-100 rounded hover:bg-blue-200 disabled:opacity-50 transition-colors"
-          >
-            {unpausing ? 'Unpausing...' : 'Unpause'}
-          </button>
         )}
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setShowApproveModal(true)}
+            disabled={isProcessing}
+            className="px-3 py-1.5 text-xs font-medium text-white bg-terracotta rounded hover:bg-terracotta-dark disabled:opacity-50 transition-colors"
+          >
+            Approve
+          </button>
+
+          <button
+            onClick={handleArchive}
+            disabled={isProcessing}
+            className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 transition-colors"
+          >
+            {archiving ? 'Archiving...' : 'Archive'}
+          </button>
+
+          <button
+            onClick={handleReject}
+            disabled={isProcessing}
+            className="px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-50 rounded hover:bg-gray-100 disabled:opacity-50 transition-colors"
+          >
+            {rejecting ? 'Rejecting...' : 'Reject'}
+          </button>
+        </div>
       </div>
-    </div>
+
+      {showApproveModal && (
+        <ApproveModal
+          guestId={guest.id}
+          guestName={firstName}
+          onClose={() => setShowApproveModal(false)}
+          onSend={handleApprove}
+        />
+      )}
+    </>
   );
 }

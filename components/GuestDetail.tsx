@@ -3,17 +3,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Guest, GuestFields, Message } from '@/lib/types';
 import {
-  FUNNEL_STAGE_OPTIONS,
   AGE_RANGE_OPTIONS,
   SOLO_OR_COUPLE_OPTIONS,
   AVAILABLE_DAYS_OPTIONS,
   DIETARY_RESTRICTIONS_OPTIONS,
   HOSTING_INTEREST_OPTIONS,
 } from '@/lib/constants';
-import Badge from './Badge';
 import MessageThread from './MessageThread';
 import MessageCompose from './MessageCompose';
 import SocialEnrichment from './SocialEnrichment';
+import NeedsAttentionBanner from './NeedsAttentionBanner';
 
 interface GuestDetailProps {
   guest: Guest;
@@ -105,15 +104,18 @@ export default function GuestDetail({ guest, onSave, onBack, showBackButton }: G
             <h2 className="text-lg font-semibold text-gray-900 truncate">
               {fullName}
             </h2>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge stage={getValue('Funnel Stage') as string || 'New'} size="md" />
-            </div>
           </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {/* Needs Attention Banner */}
+        <NeedsAttentionBanner
+          guestId={guest.id}
+          guestName={firstName}
+        />
+
         {/* Identity Section */}
         <Section title="Identity">
           <FieldRow>
@@ -168,42 +170,6 @@ export default function GuestDetail({ guest, onSave, onBack, showBackButton }: G
 
         {/* Vetting Section */}
         <Section title="Vetting">
-          <Field label="Funnel Stage">
-            <select
-              value={getValue('Funnel Stage') as string || ''}
-              onChange={(e) => handleChange('Funnel Stage', e.target.value)}
-              className={inputClass('Funnel Stage')}
-            >
-              <option value="">Select...</option>
-              {FUNNEL_STAGE_OPTIONS.map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
-          </Field>
-          <FieldRow>
-            <Field label="Curiosity Score">
-              <input
-                type="number"
-                step="0.1"
-                min="0"
-                max="10"
-                value={getValue('Curiosity Score') as number ?? ''}
-                onChange={(e) => handleChange('Curiosity Score', e.target.value ? parseFloat(e.target.value) : undefined)}
-                className={inputClass('Curiosity Score')}
-              />
-            </Field>
-            <Field label="Spark Score">
-              <input
-                type="number"
-                step="0.1"
-                min="0"
-                max="10"
-                value={getValue('Spark Score') as number ?? ''}
-                onChange={(e) => handleChange('Spark Score', e.target.value ? parseFloat(e.target.value) : undefined)}
-                className={inputClass('Spark Score')}
-              />
-            </Field>
-          </FieldRow>
           <FieldRow>
             <Field label="Call Complete">
               <label className="flex items-center gap-2">
@@ -237,44 +203,12 @@ export default function GuestDetail({ guest, onSave, onBack, showBackButton }: G
 
         {/* Guest Profile Section */}
         <Section title="Guest Profile">
-          <Field label="What Do You Do">
-            <input
-              type="text"
-              value={getValue('What Do You Do') as string || ''}
-              onChange={(e) => handleChange('What Do You Do', e.target.value)}
-              className={inputClass('What Do You Do')}
-            />
-          </Field>
-          <Field label="About">
-            <textarea
-              rows={3}
-              value={getValue('About') as string || ''}
-              onChange={(e) => handleChange('About', e.target.value)}
-              className={inputClass('About')}
-            />
-          </Field>
-          <Field label="One Interesting Thing">
-            <textarea
-              rows={3}
-              value={getValue('OneThing') as string || ''}
-              onChange={(e) => handleChange('OneThing', e.target.value)}
-              className={inputClass('OneThing')}
-            />
-          </Field>
           <Field label="Curious About">
             <textarea
               rows={3}
               value={getValue('Curious About') as string || ''}
               onChange={(e) => handleChange('Curious About', e.target.value)}
               className={inputClass('Curious About')}
-            />
-          </Field>
-          <Field label="Surprising Knowledge">
-            <textarea
-              rows={3}
-              value={getValue('Surprising Knowledge') as string || ''}
-              onChange={(e) => handleChange('Surprising Knowledge', e.target.value)}
-              className={inputClass('Surprising Knowledge')}
             />
           </Field>
         </Section>

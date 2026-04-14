@@ -22,30 +22,44 @@ export default function AttentionPage() {
     }
   );
 
-  const handleRoute = useCallback(async (guestId: number, status: string) => {
-    const response = await fetch(`/api/guests/${guestId}/route`, {
-      method: 'POST',
+  const handleApprove = useCallback(async (guestId: number, message: string) => {
+    const response = await fetch(`/api/guests/${guestId}/approve`, {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ message }),
     });
 
     if (!response.ok) {
       const data = await response.json();
-      throw new Error(data.error || 'Failed to route guest');
+      throw new Error(data.error || 'Failed to approve guest');
     }
 
     // Revalidate the queue
     mutate();
   }, [mutate]);
 
-  const handleUnpause = useCallback(async (guestId: number) => {
-    const response = await fetch(`/api/guests/${guestId}/unpause`, {
+  const handleArchive = useCallback(async (guestId: number) => {
+    const response = await fetch(`/api/guests/${guestId}/archive`, {
       method: 'POST',
     });
 
     if (!response.ok) {
       const data = await response.json();
-      throw new Error(data.error || 'Failed to unpause sequence');
+      throw new Error(data.error || 'Failed to archive guest');
+    }
+
+    // Revalidate the queue
+    mutate();
+  }, [mutate]);
+
+  const handleReject = useCallback(async (guestId: number) => {
+    const response = await fetch(`/api/guests/${guestId}/reject`, {
+      method: 'POST',
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Failed to reject guest');
     }
 
     // Revalidate the queue
@@ -64,11 +78,11 @@ export default function AttentionPage() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              New Sign-ups
+              Needs Attention
             </h1>
             {data && (
               <p className="text-gray-600">
-                {data.totalCount} {data.totalCount === 1 ? 'guest' : 'guests'} need initial triage
+                {data.totalCount} {data.totalCount === 1 ? 'guest' : 'guests'} need attention
               </p>
             )}
           </div>
@@ -76,14 +90,14 @@ export default function AttentionPage() {
           {/* Loading State */}
           {isLoading && (
             <div className="flex items-center justify-center h-64">
-              <div className="text-gray-500">Loading new sign-ups...</div>
+              <div className="text-gray-500">Loading...</div>
             </div>
           )}
 
           {/* Error State */}
           {error && (
             <div className="flex items-center justify-center h-64">
-              <div className="text-red-500">Failed to load new sign-ups</div>
+              <div className="text-red-500">Failed to load attention queue</div>
             </div>
           )}
 
@@ -110,19 +124,20 @@ export default function AttentionPage() {
                 </svg>
               </div>
               <p className="text-lg font-medium text-gray-900 mb-1">All caught up!</p>
-              <p className="text-gray-500">No new sign-ups need triage right now.</p>
+              <p className="text-gray-500">No guests need attention right now.</p>
             </div>
           )}
 
-          {/* New Sign-ups List */}
+          {/* Attention Queue List */}
           {data && data.totalCount > 0 && (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {data.newSignups.map((item) => (
+              {data.items.map((item) => (
                 <AttentionCard
                   key={item.guest.id}
                   item={item}
-                  onRoute={handleRoute}
-                  onUnpause={handleUnpause}
+                  onApprove={handleApprove}
+                  onArchive={handleArchive}
+                  onReject={handleReject}
                   onViewGuest={handleViewGuest}
                 />
               ))}

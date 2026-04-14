@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { unpauseGuest } from '@/lib/attention';
+import { checkGuestNeedsAttention } from '@/lib/attention';
 
-export async function POST(
+export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -23,13 +23,13 @@ export async function POST(
       );
     }
 
-    await unpauseGuest(guestId);
+    const needsAttention = await checkGuestNeedsAttention(guestId);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ needsAttention });
   } catch (error) {
-    console.error('Error unpausing guest sequence:', error);
+    console.error('Error checking attention status:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to unpause sequence' },
+      { error: error instanceof Error ? error.message : 'Failed to check attention status' },
       { status: 500 }
     );
   }

@@ -39,6 +39,8 @@ function rowToGuest(row: Record<string, unknown>): Guest {
   if (row.sequence_completed != null) fields['Sequence Completed'] = Boolean(row.sequence_completed);
   if (row.sequence_paused != null) fields['Sequence Paused'] = Boolean(row.sequence_paused);
   if (row.sequence_step != null) fields['Sequence Step'] = Number(row.sequence_step);
+  if (row.attention_archived_at != null) fields['Attention Archived At'] = new Date(row.attention_archived_at as string).toISOString();
+  if (row.social_summary != null) fields['Social Summary'] = row.social_summary as GuestFields['Social Summary'];
 
   return {
     id: String(row.id),
@@ -47,71 +49,118 @@ function rowToGuest(row: Record<string, unknown>): Guest {
   };
 }
 
-// Fetch new sign-ups that need initial triage (exclude legacy data before Apr 10, 2026)
-async function fetchNewSignups(): Promise<AttentionQueueItem[]> {
+// Fetch guests that need attention: priority IS NULL + have inbound messages + not archived (or new message since archive)
+async function fetchNeedsAttention(): Promise<AttentionQueueItem[]> {
   const result = await pool.query(`
-    SELECT g.*
+    SELECT g.id, g.first_name, g.last_name, g.curious_about, g.surprising_knowledge,
+           g.one_thing, g.about, g.what_do_you_do, g.social_summary, g.age_range,
+           g.created_at, g.attention_archived_at, g.priority,
+           MAX(m.sent_at) AS last_inbound_at,
+           (SELECT body FROM messages WHERE guest_id = g.id AND direction = 'inbound' ORDER BY sent_at DESC LIMIT 1) AS last_inbound_message
     FROM guests g
-    WHERE g.routing_status IS NULL
-      AND g.created_at >= '2026-04-10'
-    ORDER BY g.created_at DESC
+    JOIN messages m ON m.guest_id = g.id AND m.direction = 'inbound'
+    WHERE g.priority IS NULL
+      AND (g.attention_archived_at IS NULL OR m.sent_at > g.attention_archived_at)
+    GROUP BY g.id
+    ORDER BY MAX(m.sent_at) DESC
   `);
 
   return result.rows.map(row => ({
     guest: rowToGuest(row),
-    lastActivityAt: row.created_at
-      ? new Date(row.created_at as string).toISOString()
+    lastActivityAt: row.last_inbound_at
+      ? new Date(row.last_inbound_at as string).toISOString()
       : new Date().toISOString(),
+    lastInboundAt: row.last_inbound_at
+      ? new Date(row.last_inbound_at as string).toISOString()
+      : undefined,
+    lastInboundMessage: row.last_inbound_message
+      ? String(row.last_inbound_message)
+      : undefined,
   }));
 }
 
 export async function fetchAttentionQueue(): Promise<AttentionQueueData> {
-  const newSignups = await fetchNewSignups();
+  const items = await fetchNeedsAttention();
 
   return {
-    newSignups,
-    totalCount: newSignups.length,
+    items,
+    totalCount: items.length,
   };
 }
 
 export async function fetchAttentionCount(): Promise<number> {
   const result = await pool.query(`
-    SELECT COUNT(*) AS total
+    SELECT COUNT(DISTINCT g.id) AS total
     FROM guests g
-    WHERE g.routing_status IS NULL
-      AND g.created_at >= '2026-04-10'
+    JOIN messages m ON m.guest_id = g.id AND m.direction = 'inbound'
+    WHERE g.priority IS NULL
+      AND (g.attention_archived_at IS NULL OR m.sent_at > g.attention_archived_at)
   `);
 
   return Number(result.rows[0]?.total ?? 0);
 }
 
-export async function routeGuest(guestId: number, status: string): Promise<void> {
-  // Map status to funnel stage
-  const funnelStageMap: Record<string, string> = {
-    green: 'Dinner Ready',
-    yellow: 'Call Scheduled',
-    red: 'New',
-    deprioritized: 'Declined',
-  };
+// Check if a specific guest currently needs attention
+export async function checkGuestNeedsAttention(guestId: number): Promise<boolean> {
+  const result = await pool.query(`
+    SELECT EXISTS(
+      SELECT 1 FROM guests g
+      JOIN messages m ON m.guest_id = g.id AND m.direction = 'inbound'
+      WHERE g.id = $1
+        AND g.priority IS NULL
+        AND (g.attention_archived_at IS NULL OR m.sent_at > g.attention_archived_at)
+    ) AS needs_attention
+  `, [guestId]);
 
-  const funnelStage = funnelStageMap[status] || 'New';
+  return Boolean(result.rows[0]?.needs_attention);
+}
 
-  // Update guest routing status and funnel stage
+// Archive a guest from the attention queue (can reappear if they send a new message)
+export async function archiveGuest(guestId: number): Promise<void> {
   await pool.query(
-    `UPDATE guests SET routing_status = $1, funnel_stage = $2, updated_at = NOW() WHERE id = $3`,
-    [status, funnelStage, guestId]
-  );
-
-  // Clear all flagged messages for this guest
-  await pool.query(
-    `UPDATE messages SET flagged = false WHERE guest_id = $1`,
+    `UPDATE guests SET attention_archived_at = NOW(), updated_at = NOW() WHERE id = $1`,
     [guestId]
   );
 }
 
-export async function unpauseGuest(guestId: number): Promise<void> {
+// Approve a guest: set priority = 1
+export async function approveGuest(guestId: number): Promise<void> {
   await pool.query(
-    `UPDATE guests SET sequence_paused = FALSE, updated_at = NOW() WHERE id = $1`,
+    `UPDATE guests SET priority = 1, updated_at = NOW() WHERE id = $1`,
     [guestId]
   );
+}
+
+// Reject a guest: set priority = 3
+export async function rejectGuest(guestId: number): Promise<void> {
+  await pool.query(
+    `UPDATE guests SET priority = 3, updated_at = NOW() WHERE id = $1`,
+    [guestId]
+  );
+}
+
+// Fetch guest profile data for AI message generation
+export async function fetchGuestProfileForMessage(guestId: number): Promise<Record<string, unknown> | null> {
+  const result = await pool.query(`
+    SELECT first_name, last_name, age_range, what_do_you_do, about, one_thing,
+           curious_about, surprising_knowledge, social_summary
+    FROM guests WHERE id = $1
+  `, [guestId]);
+
+  if (result.rows.length === 0) return null;
+
+  const row = result.rows[0];
+  const profile: Record<string, unknown> = {};
+
+  if (row.first_name) profile.firstName = row.first_name;
+  if (row.last_name) profile.lastName = row.last_name;
+  if (row.age_range) profile.ageRange = row.age_range;
+  if (row.what_do_you_do) profile.whatDoYouDo = row.what_do_you_do;
+  if (row.about) profile.about = row.about;
+  if (row.one_thing) profile.oneThing = row.one_thing;
+  if (row.curious_about) profile.curiousAbout = row.curious_about;
+  if (row.surprising_knowledge) profile.surprisingKnowledge = row.surprising_knowledge;
+  if (row.social_summary) profile.socialSummary = row.social_summary;
+
+  return profile;
 }
