@@ -21,24 +21,43 @@ interface SocialEnrichmentProps {
 
 type EnrichmentState = 'idle' | 'scraping' | 'extracting' | 'complete' | 'error';
 
+function detectInputType(input: string): 'instagram' | 'linkedin-url' | 'linkedin-text' {
+  const trimmed = input.trim();
+  if (trimmed.toLowerCase().includes('instagram.com')) return 'instagram';
+  if (trimmed.toLowerCase().includes('linkedin.com')) return 'linkedin-url';
+  return 'linkedin-text';
+}
+
 export default function SocialEnrichment({ guestId, existingSummary }: SocialEnrichmentProps) {
-  const [url, setUrl] = useState('');
+  const [input, setInput] = useState('');
   const [state, setState] = useState<EnrichmentState>('idle');
   const [result, setResult] = useState<SocialSummary | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleRunEnrichment = async () => {
-    if (!url.trim()) return;
+    if (!input.trim()) return;
 
     setError(null);
-    setState('scraping');
+    const inputType = detectInputType(input);
+
+    // For LinkedIn URLs, prompt user to paste text instead
+    if (inputType === 'linkedin-url') {
+      setError('For LinkedIn, please copy all the text from the profile page and paste it here instead of the URL.');
+      return;
+    }
+
+    setState(inputType === 'instagram' ? 'scraping' : 'extracting');
 
     try {
+      const body = inputType === 'instagram'
+        ? { url: input.trim() }
+        : { profileText: input.trim(), platform: 'linkedin' };
+
       const response = await fetch(`/api/guests/${guestId}/social-summary`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url.trim() }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -83,7 +102,7 @@ export default function SocialEnrichment({ guestId, existingSummary }: SocialEnr
 
   const handleDiscard = () => {
     setResult(null);
-    setUrl('');
+    setInput('');
     setState('idle');
     setError(null);
   };
@@ -95,22 +114,12 @@ export default function SocialEnrichment({ guestId, existingSummary }: SocialEnr
         <SummaryCard summary={existingSummary} />
         <div className="pt-2 border-t border-gray-200">
           <p className="text-xs text-gray-500 mb-2">Run new enrichment to replace existing data:</p>
-          <div className="flex gap-2">
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="LinkedIn or Instagram URL"
-              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-terracotta focus:border-terracotta"
-            />
-            <button
-              onClick={handleRunEnrichment}
-              disabled={!url.trim()}
-              className="px-4 py-2 text-sm font-medium text-white bg-terracotta rounded-lg hover:bg-terracotta-dark disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Run Enrichment
-            </button>
-          </div>
+          <EnrichmentInput
+            input={input}
+            setInput={setInput}
+            onRun={handleRunEnrichment}
+            error={error}
+          />
         </div>
       </div>
     );
@@ -160,31 +169,52 @@ export default function SocialEnrichment({ guestId, existingSummary }: SocialEnr
 
   // Default idle state with input
   return (
+    <EnrichmentInput
+      input={input}
+      setInput={setInput}
+      onRun={handleRunEnrichment}
+      error={error}
+    />
+  );
+}
+
+function EnrichmentInput({
+  input,
+  setInput,
+  onRun,
+  error,
+}: {
+  input: string;
+  setInput: (v: string) => void;
+  onRun: () => void;
+  error: string | null;
+}) {
+  return (
     <div className="space-y-3">
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
-      <div className="flex gap-2">
-        <input
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="LinkedIn or Instagram URL"
-          className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-terracotta focus:border-terracotta"
-        />
+      <textarea
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Instagram URL or paste LinkedIn profile text here..."
+        rows={4}
+        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-terracotta focus:border-terracotta resize-none"
+      />
+      <div className="flex justify-between items-center">
+        <p className="text-xs text-gray-500">
+          Instagram: paste URL | LinkedIn: copy/paste all profile text
+        </p>
         <button
-          onClick={handleRunEnrichment}
-          disabled={!url.trim()}
+          onClick={onRun}
+          disabled={!input.trim()}
           className="px-4 py-2 text-sm font-medium text-white bg-terracotta rounded-lg hover:bg-terracotta-dark disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Run Enrichment
         </button>
       </div>
-      <p className="text-xs text-gray-500">
-        Paste a LinkedIn or Instagram profile URL to extract guest insights.
-      </p>
     </div>
   );
 }
@@ -208,14 +238,16 @@ function SummaryCard({ summary }: { summary: SocialSummary }) {
       <SummaryField label="Guest Note" value={summary.guest_note} />
       <SummaryField label="Curiosity Signals" value={summary.curiosity_signals} />
 
-      <a
-        href={summary.source_url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-block text-xs text-terracotta hover:underline"
-      >
-        View original profile
-      </a>
+      {summary.source_url && (
+        <a
+          href={summary.source_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block text-xs text-terracotta hover:underline"
+        >
+          View original profile
+        </a>
+      )}
     </div>
   );
 }

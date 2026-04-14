@@ -155,7 +155,7 @@ Return ONLY valid JSON, no markdown.`;
   }
 }
 
-// POST: Run enrichment (Apify scrape + Claude extraction)
+// POST: Run enrichment (Apify scrape for Instagram, direct Claude for LinkedIn text)
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -164,11 +164,26 @@ export async function POST(
     await params; // Validate params exist
 
     const body = await request.json();
-    const { url } = body;
+    const { url, profileText, platform: explicitPlatform } = body;
 
+    // Mode 1: LinkedIn profile text pasted directly
+    if (profileText && typeof profileText === 'string') {
+      const extractedData = await extractWithClaude(profileText);
+
+      const result: SocialSummary = {
+        ...extractedData,
+        source_url: '',
+        source_platform: (explicitPlatform as Platform) || 'linkedin',
+        enriched_at: new Date().toISOString(),
+      };
+
+      return NextResponse.json({ result });
+    }
+
+    // Mode 2: Instagram URL (use Apify)
     if (!url || typeof url !== 'string') {
       return NextResponse.json(
-        { error: 'URL is required' },
+        { error: 'URL or profile text is required' },
         { status: 400 }
       );
     }
@@ -181,7 +196,14 @@ export async function POST(
       );
     }
 
-    // Run Apify scraper
+    if (platform === 'linkedin') {
+      return NextResponse.json(
+        { error: 'For LinkedIn, please copy/paste the profile text instead of the URL' },
+        { status: 400 }
+      );
+    }
+
+    // Run Apify scraper (Instagram only)
     const profileData = await runApifyScraper(url, platform);
     if (!profileData) {
       return NextResponse.json(
