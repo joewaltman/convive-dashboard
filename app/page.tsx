@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { mutate } from 'swr';
 import Sidebar from '@/components/Sidebar';
@@ -14,7 +14,7 @@ interface ToastState {
   type: 'success' | 'error';
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const searchParams = useSearchParams();
   const guestIdFromUrl = searchParams.get('guest');
 
@@ -138,5 +138,17 @@ export default function DashboardPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen flex items-center justify-center bg-cream">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }
