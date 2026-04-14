@@ -61,7 +61,7 @@ export default function AttentionCard({ item, onRoute, onUnpause, onViewGuest }:
           <div className="flex items-center gap-2 mb-1">
             <button
               onClick={handleViewGuest}
-              className="font-medium text-gray-900 hover:underline truncate"
+              className="font-medium text-terracotta hover:underline truncate text-left"
             >
               {fullName}
             </button>
