@@ -95,16 +95,14 @@ async function runApifyScraper(url: string, platform: Platform): Promise<unknown
       const item = items[0];
 
       // Check if the scraper returned an error
-      if (item && item.success === false) {
+      if (item && (item.success === false || item.error)) {
         throw new Error(item.error || 'Profile enrichment failed');
       }
 
       // Check if we got meaningful data (LinkedIn-specific check)
       if (platform === 'linkedin' && item && !item.firstName && !item.fullName && !item.headline) {
         console.error('LinkedIn scraper returned:', JSON.stringify(item));
-        // Include some of the response in the error for debugging
-        const keys = Object.keys(item || {}).slice(0, 10).join(', ');
-        throw new Error(`LinkedIn data incomplete. Response keys: ${keys || 'none'}`);
+        throw new Error('LinkedIn profile data unavailable - profile may be private');
       }
 
       return item || null;
