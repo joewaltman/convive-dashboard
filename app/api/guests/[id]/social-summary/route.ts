@@ -100,9 +100,11 @@ async function runApifyScraper(url: string, platform: Platform): Promise<unknown
       }
 
       // Check if we got meaningful data (LinkedIn-specific check)
-      if (item && !item.firstName && !item.fullName && !item.headline) {
-        console.error('LinkedIn scraper returned empty profile:', JSON.stringify(item));
-        throw new Error('LinkedIn profile data unavailable - profile may be private or restricted');
+      if (platform === 'linkedin' && item && !item.firstName && !item.fullName && !item.headline) {
+        console.error('LinkedIn scraper returned:', JSON.stringify(item));
+        // Include some of the response in the error for debugging
+        const keys = Object.keys(item || {}).slice(0, 10).join(', ');
+        throw new Error(`LinkedIn data incomplete. Response keys: ${keys || 'none'}`);
       }
 
       return item || null;
