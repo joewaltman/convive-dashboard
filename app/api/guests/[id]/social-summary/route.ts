@@ -92,7 +92,20 @@ async function runApifyScraper(url: string, platform: Platform): Promise<unknown
       }
 
       const items = await datasetResponse.json();
-      return items[0] || null;
+      const item = items[0];
+
+      // Check if the scraper returned an error
+      if (item && item.success === false) {
+        throw new Error(item.error || 'Profile enrichment failed');
+      }
+
+      // Check if we got meaningful data (LinkedIn-specific check)
+      if (item && !item.firstName && !item.fullName && !item.headline) {
+        console.error('LinkedIn scraper returned empty profile:', JSON.stringify(item));
+        throw new Error('LinkedIn profile data unavailable - profile may be private or restricted');
+      }
+
+      return item || null;
     }
 
     if (status === 'FAILED' || status === 'ABORTED' || status === 'TIMED-OUT') {
