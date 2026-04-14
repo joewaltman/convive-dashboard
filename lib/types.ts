@@ -39,6 +39,19 @@ export interface GuestFields {
   'Sequence Completed'?: boolean;
   'Sequence Paused'?: boolean;
   'Sequence Step'?: number | null;
+
+  // Social Enrichment
+  'Social Summary'?: {
+    inferred_role: string;
+    industries: string[];
+    interests: string[];
+    conversational_vibe: string;
+    guest_note: string;
+    curiosity_signals: string;
+    source_url: string;
+    source_platform: 'linkedin' | 'instagram';
+    enriched_at: string;
+  } | null;
 }
 
 export interface Guest {

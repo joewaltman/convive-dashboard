@@ -44,6 +44,7 @@ function rowToGuest(row: Record<string, unknown>): Guest {
   if (row.last_replied_at != null) fields['Last Replied At'] = new Date(row.last_replied_at as string).toISOString();
   if (row.last_message_sent_at != null) fields['Last Message Sent At'] = new Date(row.last_message_sent_at as string).toISOString();
   if (row.sequence_completed != null) fields['Sequence Completed'] = Boolean(row.sequence_completed);
+  if (row.social_summary != null) fields['Social Summary'] = row.social_summary as GuestFields['Social Summary'];
 
   return {
     id: String(row.id),
@@ -79,6 +80,7 @@ const fieldToColumn: Record<string, string> = {
   'Last Replied At': 'last_replied_at',
   'Last Message Sent At': 'last_message_sent_at',
   'Sequence Completed': 'sequence_completed',
+  'Social Summary': 'social_summary',
 };
 
 export async function fetchAllGuests(): Promise<Guest[]> {

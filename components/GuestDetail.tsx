@@ -13,6 +13,7 @@ import {
 import Badge from './Badge';
 import MessageThread from './MessageThread';
 import MessageCompose from './MessageCompose';
+import SocialEnrichment from './SocialEnrichment';
 
 interface GuestDetailProps {
   guest: Guest;
@@ -340,6 +341,14 @@ export default function GuestDetail({ guest, onSave, onBack, showBackButton }: G
               className={inputClass('Summarized Transcript')}
             />
           </Field>
+        </Section>
+
+        {/* Social Enrichment Section */}
+        <Section title="Social Enrichment">
+          <SocialEnrichment
+            guestId={guest.id}
+            existingSummary={guest.fields['Social Summary']}
+          />
         </Section>
 
         {/* Messages Section */}
