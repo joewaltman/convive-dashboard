@@ -35,7 +35,7 @@ async function runApifyScraper(url: string, platform: Platform): Promise<unknown
 
   // Build input based on platform (different actors expect different schemas)
   const input = platform === 'linkedin'
-    ? { startUrls: [{ url }] }
+    ? { profileUrls: [url] }
     : { directUrls: [url], resultsType: 'details' };
 
   // Start the actor run
