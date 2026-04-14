@@ -30,7 +30,7 @@ async function runApifyScraper(url: string, platform: Platform): Promise<unknown
   }
 
   const actorId = platform === 'linkedin'
-    ? 'bebity~linkedin-profile-scraper'
+    ? 'anchor~linkedin-profile-scraper'
     : 'apify~instagram-scraper';
 
   // Build input based on platform (different actors expect different schemas)
