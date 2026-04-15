@@ -111,10 +111,13 @@ export async function checkGuestNeedsAttention(guestId: number): Promise<boolean
 // Archive a guest from the attention queue (can reappear if they send a new message)
 // This is COSMETIC only - just hides from queue, does NOT affect the onboarding sequence
 export async function archiveGuest(guestId: number): Promise<void> {
+  console.log('[archiveGuest] Starting for guest:', guestId);
+  console.log('[archiveGuest] ONLY setting attention_archived_at - NOT touching sequence fields');
   await pool.query(
     `UPDATE guests SET attention_archived_at = NOW(), updated_at = NOW() WHERE id = $1`,
     [guestId]
   );
+  console.log('[archiveGuest] Complete');
 }
 
 // Approve a guest: set priority = 1 and STOP the onboarding sequence
