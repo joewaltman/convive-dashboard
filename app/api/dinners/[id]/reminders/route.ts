@@ -265,10 +265,22 @@ export async function POST(
       biosByGuest.set(bio.guestId, bio.bio);
     }
 
-    // 6. Format date/time for Pacific timezone
-    // Append T12:00:00 to avoid UTC midnight rolling back to previous day in Pacific
-    const dateStr = String(dinner.dinner_date).split('T')[0]; // Handle both Date objects and strings
-    const date = new Date(`${dateStr}T12:00:00`);
+    // 6. Format date/time
+    // Handle dinner_date as either Date object or string from PostgreSQL
+    let date: Date;
+    if (dinner.dinner_date instanceof Date) {
+      // PostgreSQL Date - use the date parts directly to avoid timezone shifts
+      date = new Date(
+        dinner.dinner_date.getFullYear(),
+        dinner.dinner_date.getMonth(),
+        dinner.dinner_date.getDate(),
+        12, 0, 0
+      );
+    } else {
+      // String format like "2025-04-17"
+      const dateStr = String(dinner.dinner_date).split('T')[0];
+      date = new Date(`${dateStr}T12:00:00`);
+    }
     const fullDate = format(date, 'EEEE, MMMM d');
     const dayOfWeek = format(date, 'EEEE');
     const time = formatTime(dinner.start_time);
