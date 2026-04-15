@@ -7,7 +7,7 @@ import type { GuestReminder, ReminderResponse } from '@/lib/types';
 interface DinnerRow {
   id: number;
   dinner_name: string;
-  dinner_date: string;
+  dinner_date: string | Date;
   start_time: string;
   menu: string | null;
   host_address: string | null;
