@@ -306,6 +306,14 @@ export default function GuestDetail({ guest, onSave, onBack, showBackButton }: G
           <SocialEnrichment
             guestId={guest.id}
             existingSummary={guest.fields['Social Summary']}
+            hasEnoughDataForQuestions={Boolean(
+              guest.fields['OneThing'] ||
+              guest.fields['About'] ||
+              guest.fields['Curious About'] ||
+              guest.fields['Surprising Knowledge'] ||
+              guest.fields['What Do You Do'] ||
+              guest.fields['Summarized Transcript']
+            )}
           />
         </Section>
 

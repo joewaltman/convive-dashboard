@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import FollowUpQuestions from './FollowUpQuestions';
 
 interface SocialSummary {
   inferred_role: string;
@@ -17,6 +18,7 @@ interface SocialSummary {
 interface SocialEnrichmentProps {
   guestId: string;
   existingSummary?: SocialSummary | null;
+  hasEnoughDataForQuestions?: boolean;
 }
 
 type EnrichmentState = 'idle' | 'scraping' | 'extracting' | 'complete' | 'error';
@@ -28,7 +30,7 @@ function detectInputType(input: string): 'instagram' | 'linkedin-url' | 'linkedi
   return 'linkedin-text';
 }
 
-export default function SocialEnrichment({ guestId, existingSummary }: SocialEnrichmentProps) {
+export default function SocialEnrichment({ guestId, existingSummary, hasEnoughDataForQuestions = false }: SocialEnrichmentProps) {
   const [input, setInput] = useState('');
   const [state, setState] = useState<EnrichmentState>('idle');
   const [result, setResult] = useState<SocialSummary | null>(null);
@@ -112,6 +114,10 @@ export default function SocialEnrichment({ guestId, existingSummary }: SocialEnr
     return (
       <div className="space-y-4">
         <SummaryCard summary={existingSummary} />
+        <FollowUpQuestions
+          guestId={guestId}
+          hasEnoughData={true}
+        />
         <div className="pt-2 border-t border-gray-200">
           <p className="text-xs text-gray-500 mb-2">Run new enrichment to replace existing data:</p>
           <EnrichmentInput
@@ -169,12 +175,20 @@ export default function SocialEnrichment({ guestId, existingSummary }: SocialEnr
 
   // Default idle state with input
   return (
-    <EnrichmentInput
-      input={input}
-      setInput={setInput}
-      onRun={handleRunEnrichment}
-      error={error}
-    />
+    <div className="space-y-4">
+      <EnrichmentInput
+        input={input}
+        setInput={setInput}
+        onRun={handleRunEnrichment}
+        error={error}
+      />
+      {hasEnoughDataForQuestions && (
+        <FollowUpQuestions
+          guestId={guestId}
+          hasEnoughData={true}
+        />
+      )}
+    </div>
   );
 }
 
