@@ -7,7 +7,7 @@ import ApproveModal from './ApproveModal';
 
 interface AttentionCardProps {
   item: AttentionQueueItem;
-  onApprove: (guestId: number, message: string) => Promise<void>;
+  onApprove: (guestId: number, message?: string) => Promise<void>;
   onArchive: (guestId: number) => Promise<void>;
   onReject: (guestId: number) => Promise<void>;
   onViewGuest?: (guestId: string) => void;
@@ -28,7 +28,7 @@ export default function AttentionCard({ item, onApprove, onArchive, onReject, on
     ? formatDistanceToNow(new Date(lastInboundAt), { addSuffix: true })
     : '';
 
-  const handleApprove = useCallback(async (message: string) => {
+  const handleApprove = useCallback(async (message?: string) => {
     await onApprove(parseInt(guest.id, 10), message);
   }, [guest.id, onApprove]);
 

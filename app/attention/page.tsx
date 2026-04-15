@@ -22,11 +22,11 @@ export default function AttentionPage() {
     }
   );
 
-  const handleApprove = useCallback(async (guestId: number, message: string) => {
+  const handleApprove = useCallback(async (guestId: number, message?: string) => {
     const response = await fetch(`/api/guests/${guestId}/approve`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message: message || '' }),
     });
 
     if (!response.ok) {

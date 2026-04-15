@@ -109,15 +109,13 @@ export async function PATCH(
     const body = await request.json();
     const { message } = body;
 
-    if (!message || typeof message !== 'string' || message.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'Message is required' },
-        { status: 400 }
-      );
-    }
-
     // Set priority = 1
     await approveGuest(guestId);
+
+    // If no message provided, just approve without sending
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return NextResponse.json({ success: true, message: null });
+    }
 
     // Create the message in database
     const newMessage = await createMessage(guestId, message.trim());

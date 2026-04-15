@@ -31,13 +31,13 @@ export default function NeedsAttentionBanner({ guestId, guestName, onActionCompl
     checkStatus();
   }, [guestId]);
 
-  const handleApprove = useCallback(async (message: string) => {
+  const handleApprove = useCallback(async (message?: string) => {
     setProcessing('approve');
     try {
       const response = await fetch(`/api/guests/${guestId}/approve`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message: message || '' }),
       });
 
       if (!response.ok) {

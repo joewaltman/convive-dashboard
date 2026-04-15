@@ -6,7 +6,7 @@ interface ApproveModalProps {
   guestId: string;
   guestName: string;
   onClose: () => void;
-  onSend: (message: string) => Promise<void>;
+  onSend: (message?: string) => Promise<void>;
 }
 
 const CHARACTER_LIMIT = 1600;
@@ -55,6 +55,21 @@ export default function ApproveModal({ guestId, guestName, onClose, onSend }: Ap
       setSending(false);
     }
   }, [draft, sending, onSend, onClose]);
+
+  const handleApproveOnly = useCallback(async () => {
+    if (sending) return;
+
+    setSending(true);
+    setError(null);
+
+    try {
+      await onSend();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to approve');
+      setSending(false);
+    }
+  }, [sending, onSend, onClose]);
 
   const characterCount = draft.length;
   const isOverLimit = characterCount > CHARACTER_LIMIT;
@@ -138,21 +153,30 @@ export default function ApproveModal({ guestId, guestName, onClose, onSend }: Ap
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between">
           <button
-            onClick={onClose}
-            disabled={sending}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            onClick={handleApproveOnly}
+            disabled={loading || sending}
+            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 disabled:opacity-50 transition-colors"
           >
-            Cancel
+            {sending ? 'Approving...' : 'Approve without message'}
           </button>
-          <button
-            onClick={handleSend}
-            disabled={loading || sending || !draft.trim() || isOverLimit}
-            className="px-4 py-2 text-sm font-medium text-white bg-terracotta rounded-lg hover:bg-terracotta-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {sending ? 'Sending...' : 'Send Message'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              disabled={sending}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSend}
+              disabled={loading || sending || !draft.trim() || isOverLimit}
+              className="px-4 py-2 text-sm font-medium text-white bg-terracotta rounded-lg hover:bg-terracotta-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {sending ? 'Sending...' : 'Send Message'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
