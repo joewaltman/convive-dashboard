@@ -88,9 +88,11 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  console.log('[approve] PATCH request started');
   try {
     const { id } = await params;
     const guestId = parseInt(id, 10);
+    console.log('[approve] Guest ID:', guestId);
 
     if (isNaN(guestId)) {
       return NextResponse.json(
@@ -110,24 +112,35 @@ export async function PATCH(
     const { message } = body;
 
     // Set priority = 1
+    console.log('[approve] Calling approveGuest...');
     await approveGuest(guestId);
+    console.log('[approve] approveGuest complete');
 
     // If no message provided, just approve without sending
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      console.log('[approve] No message, returning early');
       return NextResponse.json({ success: true, message: null });
     }
 
     // Create the message in database
+    console.log('[approve] Creating message in DB...');
     const newMessage = await createMessage(guestId, message.trim());
+    console.log('[approve] Message created:', newMessage.id);
 
     // Send via external API with timeout
     const apiUrl = process.env.CONVIVE_API_URL;
     const apiSecret = process.env.DASHBOARD_API_SECRET;
 
+    console.log('[approve] External API config:', { hasUrl: !!apiUrl, hasSecret: !!apiSecret });
+
     if (apiUrl && apiSecret) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => {
+        console.log('[approve] Timeout reached, aborting...');
+        controller.abort();
+      }, 10000); // 10 second timeout
 
+      console.log('[approve] Calling external API...');
       try {
         const response = await fetch(`${apiUrl}/api/send-sms`, {
           method: 'POST',
@@ -159,9 +172,10 @@ export async function PATCH(
         }
       }
     } else {
-      console.log('External API not configured - CONVIVE_API_URL or DASHBOARD_API_SECRET missing');
+      console.log('[approve] External API not configured - CONVIVE_API_URL or DASHBOARD_API_SECRET missing');
     }
 
+    console.log('[approve] Returning success response');
     return NextResponse.json({ success: true, message: newMessage });
   } catch (error) {
     console.error('Error approving guest:', error);

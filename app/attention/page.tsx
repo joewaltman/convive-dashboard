@@ -23,19 +23,33 @@ export default function AttentionPage() {
   );
 
   const handleApprove = useCallback(async (guestId: number, message?: string) => {
-    const response = await fetch(`/api/guests/${guestId}/approve`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: message || '' }),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second client timeout
 
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.error || 'Failed to approve guest');
+    try {
+      const response = await fetch(`/api/guests/${guestId}/approve`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message || '' }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to approve guest');
+      }
+
+      // Revalidate the queue
+      mutate();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request timed out. Please try again.');
+      }
+      throw error;
     }
-
-    // Revalidate the queue
-    mutate();
   }, [mutate]);
 
   const handleArchive = useCallback(async (guestId: number) => {

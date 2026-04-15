@@ -33,12 +33,19 @@ export default function NeedsAttentionBanner({ guestId, guestName, onActionCompl
 
   const handleApprove = useCallback(async (message?: string) => {
     setProcessing('approve');
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second client timeout
+
     try {
       const response = await fetch(`/api/guests/${guestId}/approve`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: message || '' }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const data = await response.json();
@@ -48,7 +55,11 @@ export default function NeedsAttentionBanner({ guestId, guestName, onActionCompl
       setNeedsAttention(false);
       onActionComplete?.();
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error('Error approving guest:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request timed out. Please try again.');
+      }
       throw error;
     } finally {
       setProcessing(null);
