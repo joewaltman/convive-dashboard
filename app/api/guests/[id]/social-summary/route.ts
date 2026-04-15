@@ -116,6 +116,17 @@ async function runApifyScraper(url: string, platform: Platform): Promise<unknown
   throw new Error('Actor run timed out');
 }
 
+// Truncate text to stay within token limits (roughly 4 chars per token)
+const MAX_PROFILE_CHARS = 50000; // ~12,500 tokens, leaves room for prompt
+
+function truncateProfileData(data: unknown): string {
+  const text = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+  if (text.length <= MAX_PROFILE_CHARS) {
+    return text;
+  }
+  return text.slice(0, MAX_PROFILE_CHARS) + '\n\n[... truncated for length ...]';
+}
+
 async function extractWithClaude(profileData: unknown): Promise<Omit<SocialSummary, 'source_url' | 'source_platform' | 'enriched_at'>> {
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   if (!anthropicKey) {
@@ -123,6 +134,8 @@ async function extractWithClaude(profileData: unknown): Promise<Omit<SocialSumma
   }
 
   const client = new Anthropic({ apiKey: anthropicKey });
+
+  const truncatedData = truncateProfileData(profileData);
 
   const prompt = `Extract the following from this social profile and return as JSON:
 - inferred_role: their job or what they seem to do
@@ -133,7 +146,7 @@ async function extractWithClaude(profileData: unknown): Promise<Omit<SocialSumma
 - curiosity_signals: any evidence they ask questions, explore outside their lane, show intellectual range
 
 Profile data:
-${JSON.stringify(profileData, null, 2)}
+${truncatedData}
 
 Return ONLY valid JSON, no markdown.`;
 
