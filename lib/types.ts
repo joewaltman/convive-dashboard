@@ -177,3 +177,20 @@ export interface BringItemClaim {
   claimedAt: string;
   guest?: Guest;
 }
+
+// Reminder types
+export interface GuestReminder {
+  guestId: number;
+  guestName: string;
+  firstName: string;
+  phone: string | null;
+  bringItem: string | null;
+  message: string;
+}
+
+export interface ReminderResponse {
+  dinnerId: number;
+  dinnerName: string;
+  dinnerDate: string;
+  reminders: GuestReminder[];
+}

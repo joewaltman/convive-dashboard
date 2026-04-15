@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import useSWR, { mutate } from 'swr';
 import InvitationRow from './InvitationRow';
 import BringItemSection from './BringItemSection';
+import ReminderSection from './ReminderSection';
 import type { Dinner, DinnerFields, Host, InvitationResponse } from '@/lib/types';
 
 interface DinnerDetailProps {
@@ -222,6 +223,9 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
 
   const activeHosts = (hosts || []).filter(h => h.fields['Active'] !== false);
 
+  const hasAcceptedGuests = (dinner?.invitations || [])
+    .some(inv => inv.response === 'Accepted');
+
   return (
     <div className="p-6 space-y-6 max-w-4xl">
       {/* Error Banner */}
@@ -379,6 +383,12 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
         items={dinner.bringItems || []}
         onAdd={handleAddBringItem}
         onDelete={handleDeleteBringItem}
+      />
+
+      {/* Reminder Texts */}
+      <ReminderSection
+        dinnerId={dinnerId}
+        hasAcceptedGuests={hasAcceptedGuests}
       />
 
       {/* Delete Dinner */}
