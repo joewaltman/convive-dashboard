@@ -116,6 +116,7 @@ export async function checkGuestNeedsAttention(guestId: number): Promise<boolean
 }
 
 // Archive a guest from the attention queue (can reappear if they send a new message)
+// This is COSMETIC only - just hides from queue, does NOT affect the onboarding sequence
 export async function archiveGuest(guestId: number): Promise<void> {
   await pool.query(
     `UPDATE guests SET attention_archived_at = NOW(), updated_at = NOW() WHERE id = $1`,
@@ -123,18 +124,32 @@ export async function archiveGuest(guestId: number): Promise<void> {
   );
 }
 
-// Approve a guest: set priority = 1
+// Approve a guest: set priority = 1 and STOP the onboarding sequence
+// Guest has been manually handled, no more automated messages needed
 export async function approveGuest(guestId: number): Promise<void> {
   await pool.query(
-    `UPDATE guests SET priority = 1, updated_at = NOW() WHERE id = $1`,
+    `UPDATE guests SET
+      priority = 1,
+      sequence_paused = true,
+      sequence_completed = true,
+      next_sequence_scheduled_at = NULL,
+      updated_at = NOW()
+    WHERE id = $1`,
     [guestId]
   );
 }
 
-// Reject a guest: set priority = 3
+// Reject a guest: set priority = 3 and STOP the onboarding sequence
+// Guest should not receive any more automated messages
 export async function rejectGuest(guestId: number): Promise<void> {
   await pool.query(
-    `UPDATE guests SET priority = 3, updated_at = NOW() WHERE id = $1`,
+    `UPDATE guests SET
+      priority = 3,
+      sequence_paused = true,
+      sequence_completed = true,
+      next_sequence_scheduled_at = NULL,
+      updated_at = NOW()
+    WHERE id = $1`,
     [guestId]
   );
 }
