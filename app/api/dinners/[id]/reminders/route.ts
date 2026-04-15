@@ -125,6 +125,8 @@ Rules:
 - Warm, specific, conversational tone
 - First name only
 - Focus on what makes them interesting at a dinner table
+- NEVER mention sad or sensitive topics (death, illness, divorce, loss, being widowed, etc.)
+- Keep it upbeat and forward-looking
 - NEVER use em dashes anywhere in the output
 - Return ONLY a JSON array: [{ "guestId": 123, "bio": "..." }, ...]`;
 
@@ -287,7 +289,7 @@ export async function POST(
         .filter(g => g.id !== guest.id)
         .map(g => {
           const bio = biosByGuest.get(g.id) || 'An interesting dinner companion';
-          return `${g.first_name}, ${bio}`;
+          return `${g.first_name} - ${bio}`;
         })
         .join('\n');
 
