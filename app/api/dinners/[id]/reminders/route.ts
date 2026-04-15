@@ -267,6 +267,8 @@ export async function POST(
 
     // 6. Format date/time
     // Handle dinner_date as either Date object or string from PostgreSQL
+    console.log('dinner.dinner_date raw:', dinner.dinner_date, 'type:', typeof dinner.dinner_date);
+
     let date: Date;
     if (dinner.dinner_date instanceof Date) {
       // PostgreSQL Date - use the date parts directly to avoid timezone shifts
@@ -276,11 +278,22 @@ export async function POST(
         dinner.dinner_date.getDate(),
         12, 0, 0
       );
+    } else if (typeof dinner.dinner_date === 'string') {
+      // String format - extract YYYY-MM-DD part
+      const match = dinner.dinner_date.match(/(\d{4})-(\d{2})-(\d{2})/);
+      if (match) {
+        date = new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]), 12, 0, 0);
+      } else {
+        // Fallback: try parsing directly
+        date = new Date(dinner.dinner_date);
+      }
     } else {
-      // String format like "2025-04-17"
-      const dateStr = String(dinner.dinner_date).split('T')[0];
-      date = new Date(`${dateStr}T12:00:00`);
+      // Fallback for any other type
+      date = new Date(dinner.dinner_date);
     }
+
+    console.log('Parsed date:', date, 'isValid:', !isNaN(date.getTime()));
+
     const fullDate = format(date, 'EEEE, MMMM d');
     const dayOfWeek = format(date, 'EEEE');
     const time = formatTime(dinner.start_time);
