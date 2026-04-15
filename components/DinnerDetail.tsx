@@ -21,6 +21,7 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
   const [selectedHostId, setSelectedHostId] = useState<string>('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Fetch dinner details
   const { data: dinner, error, isLoading } = useSWR<Dinner>(
@@ -100,17 +101,24 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
     invitationId: number,
     response: InvitationResponse
   ) => {
-    const res = await fetch(`/api/invitations/${invitationId}/response`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ response }),
-    });
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/invitations/${invitationId}/response`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ response }),
+      });
 
-    if (!res.ok) {
-      throw new Error('Failed to update response');
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to update response');
+      }
+
+      mutate(`/api/dinners/${dinnerId}`);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to update response');
+      throw err;
     }
-
-    mutate(`/api/dinners/${dinnerId}`);
   }, [dinnerId]);
 
   const handleAddBringItem = useCallback(async (
@@ -216,6 +224,21 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
 
   return (
     <div className="p-6 space-y-6 max-w-4xl">
+      {/* Error Banner */}
+      {actionError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center justify-between">
+          <span className="text-sm text-red-600">{actionError}</span>
+          <button
+            onClick={() => setActionError(null)}
+            className="text-red-400 hover:text-red-600"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>

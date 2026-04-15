@@ -54,7 +54,7 @@ export async function updateInvitationResponse(
   // Update the invitation response
   await pool.query(`
     UPDATE invitations
-    SET response = $1, response_date = CASE WHEN $1 IS NOT NULL THEN CURRENT_DATE ELSE NULL END, updated_at = NOW()
+    SET response = $1, response_date = CASE WHEN $1 IS NOT NULL THEN CURRENT_DATE ELSE NULL END
     WHERE id = $2
   `, [response, id]);
 
