@@ -44,13 +44,17 @@ export default function ApproveModal({ guestId, guestName, onClose, onSend }: Ap
   const handleSend = useCallback(async () => {
     if (!draft.trim() || sending) return;
 
+    console.log('[ApproveModal] handleSend started');
     setSending(true);
     setError(null);
 
     try {
+      console.log('[ApproveModal] Calling onSend...');
       await onSend(draft.trim());
+      console.log('[ApproveModal] onSend completed, closing modal');
       onClose();
     } catch (err) {
+      console.error('[ApproveModal] Error:', err);
       setError(err instanceof Error ? err.message : 'Failed to send message');
       setSending(false);
     }
