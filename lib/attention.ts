@@ -127,31 +127,31 @@ export async function archiveGuest(guestId: number): Promise<void> {
 // Approve a guest: set priority = 1 and STOP the onboarding sequence
 // Guest has been manually handled, no more automated messages needed
 export async function approveGuest(guestId: number): Promise<void> {
+  console.log('[approveGuest] Starting for guest:', guestId);
   await pool.query(
     `UPDATE guests SET
       priority = 1,
-      sequence_paused = true,
       sequence_completed = true,
-      next_sequence_scheduled_at = NULL,
       updated_at = NOW()
     WHERE id = $1`,
     [guestId]
   );
+  console.log('[approveGuest] Complete');
 }
 
 // Reject a guest: set priority = 3 and STOP the onboarding sequence
 // Guest should not receive any more automated messages
 export async function rejectGuest(guestId: number): Promise<void> {
+  console.log('[rejectGuest] Starting for guest:', guestId);
   await pool.query(
     `UPDATE guests SET
       priority = 3,
-      sequence_paused = true,
       sequence_completed = true,
-      next_sequence_scheduled_at = NULL,
       updated_at = NOW()
     WHERE id = $1`,
     [guestId]
   );
+  console.log('[rejectGuest] Complete');
 }
 
 // Fetch guest profile data for AI message generation
