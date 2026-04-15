@@ -122,11 +122,14 @@ export async function PATCH(
     // Create the message in database
     const newMessage = await createMessage(guestId, message.trim());
 
-    // Send via external API
+    // Send via external API with timeout
     const apiUrl = process.env.CONVIVE_API_URL;
     const apiSecret = process.env.DASHBOARD_API_SECRET;
 
     if (apiUrl && apiSecret) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       try {
         const response = await fetch(`${apiUrl}/api/send-sms`, {
           method: 'POST',
@@ -138,15 +141,27 @@ export async function PATCH(
             guestId,
             message: message.trim(),
           }),
+          signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         if (response.ok) {
           await markMessageDelivered(newMessage.id);
           newMessage.delivered = true;
+        } else {
+          console.error('External API returned error:', response.status, await response.text());
         }
       } catch (apiError) {
-        console.error('Error sending to external API:', apiError);
+        clearTimeout(timeoutId);
+        if (apiError instanceof Error && apiError.name === 'AbortError') {
+          console.error('External API request timed out after 10 seconds');
+        } else {
+          console.error('Error sending to external API:', apiError);
+        }
       }
+    } else {
+      console.log('External API not configured - CONVIVE_API_URL or DASHBOARD_API_SECRET missing');
     }
 
     return NextResponse.json({ success: true, message: newMessage });
