@@ -1,12 +1,5 @@
-import { Pool } from 'pg';
+import { pool } from './pool';
 import type { Guest, GuestFields, AttentionQueueItem, AttentionQueueData } from './types';
-
-const dbUrl = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL || '';
-
-const pool = new Pool({
-  connectionString: dbUrl,
-  ssl: dbUrl.includes('localhost') ? false : { rejectUnauthorized: false },
-});
 
 function rowToGuest(row: Record<string, unknown>): Guest {
   const fields: GuestFields = {};

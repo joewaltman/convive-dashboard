@@ -1,12 +1,5 @@
-import { Pool } from 'pg';
+import { pool } from './pool';
 import type { Dinner, DinnerFields, Host, HostFields, Invitation, BringItem } from './types';
-
-const dbUrl = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL || '';
-
-const pool = new Pool({
-  connectionString: dbUrl,
-  ssl: dbUrl.includes('localhost') ? false : { rejectUnauthorized: false },
-});
 
 function rowToDinner(row: Record<string, unknown>): Dinner {
   const fields: DinnerFields = {};

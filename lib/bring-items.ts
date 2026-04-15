@@ -1,12 +1,5 @@
-import { Pool } from 'pg';
+import { pool } from './pool';
 import type { BringItem, BringItemClaim } from './types';
-
-const dbUrl = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL || '';
-
-const pool = new Pool({
-  connectionString: dbUrl,
-  ssl: dbUrl.includes('localhost') ? false : { rejectUnauthorized: false },
-});
 
 function rowToBringItem(row: Record<string, unknown>): BringItem {
   return {
