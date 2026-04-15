@@ -161,9 +161,29 @@ Return ONLY valid JSON, no markdown.`;
     throw new Error('No text response from Claude');
   }
 
+  let jsonText = textContent.text.trim();
+
+  // Strip markdown code blocks if present
+  if (jsonText.startsWith('```json')) {
+    jsonText = jsonText.slice(7);
+  } else if (jsonText.startsWith('```')) {
+    jsonText = jsonText.slice(3);
+  }
+  if (jsonText.endsWith('```')) {
+    jsonText = jsonText.slice(0, -3);
+  }
+  jsonText = jsonText.trim();
+
+  // Try to extract JSON object if there's extra text
+  const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    jsonText = jsonMatch[0];
+  }
+
   try {
-    return JSON.parse(textContent.text);
-  } catch {
+    return JSON.parse(jsonText);
+  } catch (e) {
+    console.error('Failed to parse JSON:', jsonText);
     throw new Error('Failed to parse Claude response as JSON');
   }
 }
