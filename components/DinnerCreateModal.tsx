@@ -7,12 +7,14 @@ import { DEFAULT_START_TIME, DEFAULT_GUEST_COUNT } from '@/lib/constants';
 
 // Generate dinner name in format {mon}{dd}_{firstname}
 function generateDinnerName(date: string, hostFirstName: string): string {
-  const d = new Date(date);
+  // Parse date string directly to avoid timezone issues
+  // date format is "YYYY-MM-DD"
+  const [, month, day] = date.split('-').map(Number);
   const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-  const month = months[d.getMonth()];
-  const day = String(d.getDate()).padStart(2, '0');
+  const monthStr = months[month - 1]; // month is 1-indexed from the string
+  const dayStr = String(day).padStart(2, '0');
   const name = hostFirstName.toLowerCase();
-  return `${month}${day}_${name}`;
+  return `${monthStr}${dayStr}_${name}`;
 }
 
 interface DinnerCreateModalProps {

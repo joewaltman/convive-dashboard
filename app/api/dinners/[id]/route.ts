@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchDinner, updateDinner } from '@/lib/dinners';
+import { fetchDinner, updateDinner, deleteDinner } from '@/lib/dinners';
 
 export async function GET(
   request: Request,
@@ -56,6 +56,31 @@ export async function PATCH(
     console.error('Error updating dinner:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to update dinner' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    if (!process.env.DATABASE_PUBLIC_URL && !process.env.DATABASE_URL) {
+      return NextResponse.json(
+        { error: 'DATABASE_URL not configured' },
+        { status: 500 }
+      );
+    }
+
+    await deleteDinner(id);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting dinner:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to delete dinner' },
       { status: 500 }
     );
   }

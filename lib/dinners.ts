@@ -240,3 +240,24 @@ export async function fetchActiveHosts(): Promise<Host[]> {
   return result.rows.map(rowToHost);
 }
 
+export async function deleteDinner(id: string): Promise<void> {
+  // Delete related records first (foreign key constraints)
+  // Delete bring item claims for this dinner's bring items
+  await pool.query(`
+    DELETE FROM bring_item_claims
+    WHERE bring_item_id IN (SELECT id FROM bring_items WHERE dinner_id = $1)
+  `, [id]);
+
+  // Delete bring items
+  await pool.query('DELETE FROM bring_items WHERE dinner_id = $1', [id]);
+
+  // Delete invitations
+  await pool.query('DELETE FROM invitations WHERE dinner_id = $1', [id]);
+
+  // Delete attendance records
+  await pool.query('DELETE FROM attendance WHERE dinner_id = $1', [id]);
+
+  // Finally delete the dinner
+  await pool.query('DELETE FROM dinners WHERE id = $1', [id]);
+}
+

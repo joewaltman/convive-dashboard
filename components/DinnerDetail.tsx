@@ -19,6 +19,8 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
   const [editedFields, setEditedFields] = useState<Partial<DinnerFields>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [selectedHostId, setSelectedHostId] = useState<string>('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch dinner details
   const { data: dinner, error, isLoading } = useSWR<Dinner>(
@@ -140,6 +142,29 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
 
     mutate(`/api/dinners/${dinnerId}`);
   }, [dinnerId]);
+
+  const handleDeleteDinner = useCallback(async () => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/dinners/${dinnerId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete dinner');
+      }
+
+      // Revalidate dinner lists
+      mutate('/api/dinners?filter=upcoming');
+      mutate('/api/dinners?filter=past');
+
+      // Navigate back to dinners list
+      router.push('/dinners');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  }, [dinnerId, router]);
 
   const hasChanges = Object.keys(editedFields).length > 0;
 
@@ -332,6 +357,40 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
         onAdd={handleAddBringItem}
         onDelete={handleDeleteBringItem}
       />
+
+      {/* Delete Dinner */}
+      <div className="border-t border-gray-200 pt-6 mt-8">
+        {showDeleteConfirm ? (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-sm text-red-800 mb-3">
+              Are you sure you want to delete this dinner? This will also remove all invitations and bring items. This action cannot be undone.
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleDeleteDinner}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Yes, Delete Dinner'}
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="text-sm text-red-600 hover:text-red-700"
+          >
+            Delete this dinner
+          </button>
+        )}
+      </div>
     </div>
   );
 }
