@@ -52,9 +52,10 @@ export async function updateInvitationResponse(
   const previousResponse = current.response;
 
   // Update the invitation response
+  // Cast $1 to TEXT to handle null values properly
   await pool.query(`
     UPDATE invitations
-    SET response = $1, response_date = CASE WHEN $1 IS NOT NULL THEN CURRENT_DATE ELSE NULL END
+    SET response = $1::TEXT, response_date = CASE WHEN $1::TEXT IS NOT NULL THEN CURRENT_DATE ELSE NULL END
     WHERE id = $2
   `, [response, id]);
 
