@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { pool } from '@/lib/pool';
 import Anthropic from '@anthropic-ai/sdk';
 import { format } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
 import type { GuestReminder, ReminderResponse } from '@/lib/types';
 
 interface DinnerRow {
@@ -267,7 +266,9 @@ export async function POST(
     }
 
     // 6. Format date/time for Pacific timezone
-    const date = toZonedTime(new Date(dinner.dinner_date), 'America/Los_Angeles');
+    // Append T12:00:00 to avoid UTC midnight rolling back to previous day in Pacific
+    const dateStr = String(dinner.dinner_date).split('T')[0]; // Handle both Date objects and strings
+    const date = new Date(`${dateStr}T12:00:00`);
     const fullDate = format(date, 'EEEE, MMMM d');
     const dayOfWeek = format(date, 'EEEE');
     const time = formatTime(dinner.start_time);
