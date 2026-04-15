@@ -21,6 +21,8 @@ function rowToGuest(row: Record<string, unknown>): Guest {
   if (row.last_name != null) fields['Last Name'] = String(row.last_name);
   if (row.email != null) fields['Email'] = String(row.email);
   if (row.phone != null) fields['Phone'] = String(row.phone);
+  if (row.gender != null) fields['Gender'] = String(row.gender);
+  if (row.zip_code != null) fields['Zip Code'] = String(row.zip_code);
   if (row.age_range != null) fields['Age Range'] = String(row.age_range);
   if (row.funnel_stage != null) fields['Funnel Stage'] = String(row.funnel_stage);
   if (row.curiosity_score != null) fields['Curiosity Score'] = Number(row.curiosity_score);
@@ -60,6 +62,8 @@ const fieldToColumn: Record<string, string> = {
   'Last Name': 'last_name',
   'Email': 'email',
   'Phone': 'phone',
+  'Gender': 'gender',
+  'Zip Code': 'zip_code',
   'Age Range': 'age_range',
   'Funnel Stage': 'funnel_stage',
   'Curiosity Score': 'curiosity_score',

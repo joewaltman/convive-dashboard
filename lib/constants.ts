@@ -17,6 +17,14 @@ export const getFunnelStageColor = (stage: string): string => {
   return found?.color ?? '#9CA3AF';
 };
 
+// Gender options
+export const GENDER_OPTIONS = [
+  'Male',
+  'Female',
+  'Non-binary',
+  'Prefer not to say',
+] as const;
+
 // Age Range options
 export const AGE_RANGE_OPTIONS = [
   'Under 30',

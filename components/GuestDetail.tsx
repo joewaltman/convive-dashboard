@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Guest, GuestFields, Message } from '@/lib/types';
 import {
   AGE_RANGE_OPTIONS,
+  GENDER_OPTIONS,
   SOLO_OR_COUPLE_OPTIONS,
   AVAILABLE_DAYS_OPTIONS,
   DIETARY_RESTRICTIONS_OPTIONS,
@@ -154,17 +155,40 @@ export default function GuestDetail({ guest, onSave, onBack, showBackButton }: G
               />
             </Field>
           </FieldRow>
-          <Field label="Age Range">
-            <select
-              value={getValue('Age Range') as string || ''}
-              onChange={(e) => handleChange('Age Range', e.target.value)}
-              className={inputClass('Age Range')}
-            >
-              <option value="">Select...</option>
-              {AGE_RANGE_OPTIONS.map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
+          <FieldRow>
+            <Field label="Gender">
+              <select
+                value={getValue('Gender') as string || ''}
+                onChange={(e) => handleChange('Gender', e.target.value)}
+                className={inputClass('Gender')}
+              >
+                <option value="">Select...</option>
+                {GENDER_OPTIONS.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Age Range">
+              <select
+                value={getValue('Age Range') as string || ''}
+                onChange={(e) => handleChange('Age Range', e.target.value)}
+                className={inputClass('Age Range')}
+              >
+                <option value="">Select...</option>
+                {AGE_RANGE_OPTIONS.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </Field>
+          </FieldRow>
+          <Field label="Zip Code">
+            <input
+              type="text"
+              value={getValue('Zip Code') as string || ''}
+              onChange={(e) => handleChange('Zip Code', e.target.value)}
+              className={inputClass('Zip Code')}
+              placeholder="e.g., 92024"
+            />
           </Field>
         </Section>
 

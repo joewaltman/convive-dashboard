@@ -4,6 +4,8 @@ export interface GuestFields {
   'Last Name'?: string;
   'Email'?: string;
   'Phone'?: string;
+  'Gender'?: string;
+  'Zip Code'?: string;
   'Age Range'?: string;
 
   // Vetting
