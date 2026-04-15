@@ -142,15 +142,15 @@ export async function PATCH(
 
       console.log('[approve] Calling external API...');
       try {
-        const response = await fetch(`${apiUrl}/api/send-sms`, {
+        const response = await fetch(`${apiUrl}/api/messages/send`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiSecret}`,
+            'x-dashboard-secret': apiSecret,
           },
           body: JSON.stringify({
-            guestId,
-            message: message.trim(),
+            guest_id: guestId,
+            body: message.trim(),
           }),
           signal: controller.signal,
         });

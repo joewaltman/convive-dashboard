@@ -69,21 +69,21 @@ export async function POST(
     // Create the message in database (initially undelivered)
     const newMessage = await createMessage(guestId, message.trim());
 
-    // Send via external API
+    // Send via external API (Con-vive main service -> QUO)
     const apiUrl = process.env.CONVIVE_API_URL;
     const apiSecret = process.env.DASHBOARD_API_SECRET;
 
     if (apiUrl && apiSecret) {
       try {
-        const response = await fetch(`${apiUrl}/api/send-sms`, {
+        const response = await fetch(`${apiUrl}/api/messages/send`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiSecret}`,
+            'x-dashboard-secret': apiSecret,
           },
           body: JSON.stringify({
-            guestId,
-            message: message.trim(),
+            guest_id: guestId,
+            body: message.trim(),
           }),
         });
 
