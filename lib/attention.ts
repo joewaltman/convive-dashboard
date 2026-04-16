@@ -34,6 +34,8 @@ function rowToGuest(row: Record<string, unknown>): Guest {
   if (row.sequence_step != null) fields['Sequence Step'] = Number(row.sequence_step);
   if (row.attention_archived_at != null) fields['Attention Archived At'] = new Date(row.attention_archived_at as string).toISOString();
   if (row.social_summary != null) fields['Social Summary'] = row.social_summary as GuestFields['Social Summary'];
+  if (row.m2_variant != null) fields['M2 Variant'] = String(row.m2_variant);
+  if (row.m3_variant != null) fields['M3 Variant'] = String(row.m3_variant);
 
   return {
     id: String(row.id),
@@ -48,6 +50,7 @@ async function fetchNeedsAttention(): Promise<AttentionQueueItem[]> {
     SELECT g.id, g.first_name, g.last_name, g.curious_about, g.surprising_knowledge,
            g.one_thing, g.about, g.what_do_you_do, g.social_summary, g.age_range,
            g.created_at, g.attention_archived_at, g.priority,
+           g.m2_variant, g.m3_variant, g.sequence_step,
            MAX(m.sent_at) AS last_inbound_at,
            (SELECT body FROM messages WHERE guest_id = g.id AND direction = 'inbound' ORDER BY sent_at DESC LIMIT 1) AS last_inbound_message
     FROM guests g

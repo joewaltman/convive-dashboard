@@ -5,6 +5,21 @@ import { formatDistanceToNow } from 'date-fns';
 import type { AttentionQueueItem } from '@/lib/types';
 import ApproveModal from './ApproveModal';
 
+function getSequenceLabel(step: number, m2Variant?: string | null, m3Variant?: string | null): string {
+  if (step === 1) return "Replied to welcome text";
+  if (step === 2) {
+    if (m2Variant === 'C') return "Replied to: 'who would you sit next to?'";
+    if (m2Variant === 'E') return "Replied to: 'teach the table something'";
+    return "Replied to: social link ask"; // legacy
+  }
+  if (step === 3) {
+    if (m3Variant === 'D') return "Replied to: 'unpopular opinion'";
+    if (m3Variant === 'E') return "Replied to: 'changed your mind'";
+    return "Replied to: surprising knowledge"; // legacy
+  }
+  return "";
+}
+
 interface AttentionCardProps {
   item: AttentionQueueItem;
   onApprove: (guestId: number, message?: string) => Promise<void>;
@@ -77,6 +92,11 @@ export default function AttentionCard({ item, onApprove, onArchive, onReject, on
             {timeAgo && (
               <div className="text-xs text-gray-500">
                 {timeAgo}
+              </div>
+            )}
+            {guest.fields['Sequence Step'] != null && guest.fields['Sequence Step']! >= 1 && (
+              <div className="text-xs text-gray-400 mt-0.5">
+                {getSequenceLabel(guest.fields['Sequence Step']!, guest.fields['M2 Variant'], guest.fields['M3 Variant'])}
               </div>
             )}
           </div>

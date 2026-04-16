@@ -42,6 +42,8 @@ export interface GuestFields {
   'Sequence Paused'?: boolean;
   'Sequence Step'?: number | null;
   'Attention Archived At'?: string | null;
+  'M2 Variant'?: string | null;
+  'M3 Variant'?: string | null;
 
   // Social Enrichment
   'Social Summary'?: {
