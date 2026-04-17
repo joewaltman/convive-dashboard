@@ -13,6 +13,7 @@ function rowToDinner(row: Record<string, unknown>): Dinner {
   if (row.guest_count != null) fields['Guest Count'] = Number(row.guest_count);
   if (row.menu != null) fields['Menu'] = String(row.menu);
   if (row.notes != null) fields['Notes'] = String(row.notes);
+  if (row.payment_link != null) fields['Payment Link'] = String(row.payment_link);
   if (row.created_at != null) fields['Created Time'] = new Date(row.created_at as string).toISOString();
 
   const dinner: Dinner = {
@@ -68,6 +69,7 @@ const fieldToColumn: Record<string, string> = {
   'Guest Count': 'guest_count',
   'Menu': 'menu',
   'Notes': 'notes',
+  'Payment Link': 'payment_link',
 };
 
 const DINNER_QUERY = `

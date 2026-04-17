@@ -350,6 +350,28 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
               className={inputClass('Notes')}
             />
           </div>
+          <div className="col-span-2">
+            <label className="block text-xs text-gray-500 mb-1">Stripe Payment Link</label>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                placeholder="https://buy.stripe.com/..."
+                value={String(getValue('Payment Link') || '')}
+                onChange={(e) => handleChange('Payment Link', e.target.value)}
+                className={inputClass('Payment Link')}
+              />
+              {getValue('Payment Link') && (
+                <a
+                  href={String(getValue('Payment Link'))}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-shrink-0 px-3 py-2 text-sm text-terracotta border border-terracotta rounded-lg hover:bg-terracotta hover:text-white transition-colors"
+                >
+                  Open
+                </a>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

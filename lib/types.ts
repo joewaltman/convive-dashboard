@@ -134,6 +134,7 @@ export interface DinnerFields {
   'Guest Count'?: number;
   'Menu'?: string;
   'Notes'?: string;
+  'Payment Link'?: string;
   'Created Time'?: string;
 }
 
