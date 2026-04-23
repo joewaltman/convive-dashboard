@@ -7,6 +7,8 @@ import useSWR, { mutate } from 'swr';
 import InvitationRow from './InvitationRow';
 import BringItemSection from './BringItemSection';
 import ReminderSection from './ReminderSection';
+import DinnerStatusHeader from './DinnerStatusHeader';
+import CancelDinnerModal from './CancelDinnerModal';
 import type { Dinner, DinnerFields, Host, InvitationResponse } from '@/lib/types';
 
 interface DinnerDetailProps {
@@ -23,6 +25,7 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   // Fetch dinner details
   const { data: dinner, error, isLoading } = useSWR<Dinner>(
@@ -68,7 +71,8 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
       }));
     } else {
       setEditedFields(prev => {
-        const { 'Host ID': _, ...rest } = prev;
+        const { 'Host ID': _unused, ...rest } = prev;
+        void _unused;
         return rest;
       });
     }
@@ -118,6 +122,44 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
       mutate(`/api/dinners/${dinnerId}`);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to update response');
+      throw err;
+    }
+  }, [dinnerId]);
+
+  const handleResendInvite = useCallback(async (invitationId: number) => {
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/invitations/${invitationId}/resend`, {
+        method: 'POST',
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to resend invite');
+      }
+
+      mutate(`/api/dinners/${dinnerId}`);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to resend invite');
+      throw err;
+    }
+  }, [dinnerId]);
+
+  const handleMarkDeclined = useCallback(async (invitationId: number) => {
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/invitations/${invitationId}/mark-declined`, {
+        method: 'POST',
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to mark as declined');
+      }
+
+      mutate(`/api/dinners/${dinnerId}`);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to mark as declined');
       throw err;
     }
   }, [dinnerId]);
@@ -261,13 +303,36 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
           <p className="text-gray-600 mt-1">{formattedDate}</p>
         </div>
 
-        {hasChanges && (
+        <div className="flex items-center gap-2">
+          {hasChanges && (
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="px-4 py-2 bg-terracotta text-white text-sm font-medium rounded-lg hover:bg-terracotta-dark transition-colors disabled:opacity-50"
+            >
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Status Header */}
+      <DinnerStatusHeader dinner={dinner} />
+
+      {/* Action Buttons */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => router.push(`/dinners/${dinnerId}/shortlist`)}
+          className="px-4 py-2 text-sm font-medium text-white bg-terracotta rounded-lg hover:bg-terracotta-dark transition-colors"
+        >
+          Add Invitees
+        </button>
+        {dinner.fields['Status'] !== 'cancelled' && dinner.fields['Status'] !== 'completed' && (
           <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="px-4 py-2 bg-terracotta text-white text-sm font-medium rounded-lg hover:bg-terracotta-dark transition-colors disabled:opacity-50"
+            onClick={() => setShowCancelModal(true)}
+            className="px-4 py-2 text-sm font-medium text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            Cancel Dinner
           </button>
         )}
       </div>
@@ -394,6 +459,8 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
                 key={invitation.id}
                 invitation={invitation}
                 onResponseChange={handleInvitationResponseChange}
+                onResend={handleResendInvite}
+                onMarkDeclined={handleMarkDeclined}
               />
             ))
           )}
@@ -446,6 +513,17 @@ export default function DinnerDetail({ dinnerId }: DinnerDetailProps) {
           </button>
         )}
       </div>
+
+      {/* Cancel Dinner Modal */}
+      <CancelDinnerModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        dinner={dinner}
+        onCancelled={() => {
+          mutate(`/api/dinners/${dinnerId}`);
+          setShowCancelModal(false);
+        }}
+      />
     </div>
   );
 }

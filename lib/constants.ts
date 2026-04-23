@@ -116,3 +116,43 @@ export const BRING_ITEM_CATEGORIES = [
 export const DEFAULT_START_TIME = '18:00';
 export const DEFAULT_GUEST_COUNT = 7;
 export const DEFAULT_MAX_GUESTS = 8;
+export const DEFAULT_TOTAL_SEATS = 8;
+export const DEFAULT_MIN_PER_GENDER = 2;
+export const DEFAULT_PRICE_CENTS = 4000;
+export const DEFAULT_BRING_SLOTS = { wine: 3, appetizer: 3, dessert: 2 };
+
+// Dinner Status Options
+export const DINNER_STATUS_OPTIONS = [
+  { value: 'draft', label: 'Draft', color: '#9CA3AF' },
+  { value: 'open', label: 'Open', color: '#22C55E' },
+  { value: 'full', label: 'Full', color: '#3B82F6' },
+  { value: 'completed', label: 'Completed', color: '#6B7280' },
+  { value: 'cancelled', label: 'Cancelled', color: '#EF4444' },
+] as const;
+
+export const getDinnerStatusColor = (status: string): string => {
+  const found = DINNER_STATUS_OPTIONS.find(s => s.value === status);
+  return found?.color ?? '#9CA3AF';
+};
+
+// Invitation Status Options (for new booking flow)
+export const INVITATION_STATUS_OPTIONS = [
+  { value: 'invited', label: 'Invited', color: '#F59E0B' },
+  { value: 'checkout_pending', label: 'Checkout Pending', color: '#8B5CF6' },
+  { value: 'confirmed', label: 'Confirmed', color: '#22C55E' },
+  { value: 'cancelled', label: 'Cancelled', color: '#EF4444' },
+  { value: 'declined', label: 'Declined', color: '#6B7280' },
+  { value: 'expired', label: 'Expired', color: '#9CA3AF' },
+] as const;
+
+export const getInvitationStatusColor = (status: string | null): string => {
+  if (!status) return '#9CA3AF';
+  const found = INVITATION_STATUS_OPTIONS.find(s => s.value === status);
+  return found?.color ?? '#9CA3AF';
+};
+
+// Dinner Type Options
+export const DINNER_TYPE_OPTIONS = [
+  { value: 'couples_allowed', label: 'Couples Allowed' },
+  { value: 'singles_only', label: 'Singles Only' },
+] as const;

@@ -1,5 +1,5 @@
 import { pool } from './pool';
-import type { Invitation, InvitationResponse } from './types';
+import type { Invitation, InvitationResponse, InvitationStatus } from './types';
 
 function rowToInvitation(row: Record<string, unknown>): Invitation {
   return {
@@ -8,16 +8,31 @@ function rowToInvitation(row: Record<string, unknown>): Invitation {
     dinnerId: Number(row.dinner_id),
     guestName: `${row.first_name || ''} ${row.last_name || ''}`.trim(),
     phone: row.phone ? String(row.phone) : null,
+    email: row.email ? String(row.email) : null,
+    gender: row.gender ? String(row.gender) : null,
     inviteSentDate: row.invite_sent_date ? new Date(row.invite_sent_date as string).toISOString().split('T')[0] : null,
     response: row.response as InvitationResponse,
     responseDate: row.response_date ? new Date(row.response_date as string).toISOString().split('T')[0] : null,
     notes: row.notes ? String(row.notes) : null,
+    // New booking fields
+    status: row.status ? (row.status as InvitationStatus) : null,
+    magicToken: row.magic_token ? String(row.magic_token) : null,
+    inviteEmailSentAt: row.invite_email_sent_at ? new Date(row.invite_email_sent_at as string).toISOString() : null,
+    checkoutStartedAt: row.checkout_started_at ? new Date(row.checkout_started_at as string).toISOString() : null,
+    confirmedAt: row.confirmed_at ? new Date(row.confirmed_at as string).toISOString() : null,
+    cancelledAt: row.cancelled_at ? new Date(row.cancelled_at as string).toISOString() : null,
+    declinedAt: row.declined_at ? new Date(row.declined_at as string).toISOString() : null,
+    expiredAt: row.expired_at ? new Date(row.expired_at as string).toISOString() : null,
+    paymentIntentId: row.payment_intent_id ? String(row.payment_intent_id) : null,
+    pricePaidCents: row.price_paid_cents != null ? Number(row.price_paid_cents) : null,
+    refundedAmountCents: row.refunded_amount_cents != null ? Number(row.refunded_amount_cents) : null,
+    bringCategory: row.bring_category ? String(row.bring_category) : null,
   };
 }
 
 export async function fetchInvitationsByDinner(dinnerId: string): Promise<Invitation[]> {
   const result = await pool.query(`
-    SELECT i.*, g.first_name, g.last_name, g.phone
+    SELECT i.*, g.first_name, g.last_name, g.phone, g.email, g.gender
     FROM invitations i
     JOIN guests g ON g.id = i.guest_id
     WHERE i.dinner_id = $1
@@ -70,7 +85,7 @@ export async function updateInvitationResponse(
 
   // Fetch updated invitation
   const result = await pool.query(`
-    SELECT i.*, g.first_name, g.last_name, g.phone
+    SELECT i.*, g.first_name, g.last_name, g.phone, g.email, g.gender
     FROM invitations i
     JOIN guests g ON g.id = i.guest_id
     WHERE i.id = $1
@@ -93,7 +108,7 @@ export async function createInvitation(
   const id = result.rows[0].id;
 
   const invitationResult = await pool.query(`
-    SELECT i.*, g.first_name, g.last_name, g.phone
+    SELECT i.*, g.first_name, g.last_name, g.phone, g.email, g.gender
     FROM invitations i
     JOIN guests g ON g.id = i.guest_id
     WHERE i.id = $1

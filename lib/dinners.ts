@@ -1,5 +1,5 @@
 import { pool } from './pool';
-import type { Dinner, DinnerFields, Host, HostFields, Invitation, BringItem } from './types';
+import type { Dinner, DinnerFields, Host, HostFields, BringSlots, DinnerStatus, DinnerType } from './types';
 
 function rowToDinner(row: Record<string, unknown>): Dinner {
   const fields: DinnerFields = {};
@@ -15,6 +15,22 @@ function rowToDinner(row: Record<string, unknown>): Dinner {
   if (row.notes != null) fields['Notes'] = String(row.notes);
   if (row.payment_link != null) fields['Payment Link'] = String(row.payment_link);
   if (row.created_at != null) fields['Created Time'] = new Date(row.created_at as string).toISOString();
+
+  // New booking fields
+  if (row.total_seats != null) fields['Total Seats'] = Number(row.total_seats);
+  if (row.min_per_gender != null) fields['Min Per Gender'] = Number(row.min_per_gender);
+  if (row.bring_slots != null) {
+    const slots = typeof row.bring_slots === 'string' ? JSON.parse(row.bring_slots) : row.bring_slots;
+    fields['Bring Slots'] = slots as BringSlots;
+  }
+  if (row.price_cents != null) fields['Price Cents'] = Number(row.price_cents);
+  if (row.parking_note != null) fields['Parking Note'] = String(row.parking_note);
+  if (row.dinner_type != null) fields['Dinner Type'] = row.dinner_type as DinnerType;
+  if (row.booking_cutoff_at != null) fields['Booking Cutoff At'] = new Date(row.booking_cutoff_at as string).toISOString();
+  if (row.address != null) fields['Address'] = String(row.address);
+  if (row.vibe_descriptor != null) fields['Vibe Descriptor'] = String(row.vibe_descriptor);
+  if (row.host_guest_id != null) fields['Host Guest ID'] = Number(row.host_guest_id);
+  if (row.status != null) fields['Status'] = row.status as DinnerStatus;
 
   const dinner: Dinner = {
     id: String(row.id),
@@ -70,6 +86,18 @@ const fieldToColumn: Record<string, string> = {
   'Menu': 'menu',
   'Notes': 'notes',
   'Payment Link': 'payment_link',
+  // New booking fields
+  'Total Seats': 'total_seats',
+  'Min Per Gender': 'min_per_gender',
+  'Bring Slots': 'bring_slots',
+  'Price Cents': 'price_cents',
+  'Parking Note': 'parking_note',
+  'Dinner Type': 'dinner_type',
+  'Booking Cutoff At': 'booking_cutoff_at',
+  'Address': 'address',
+  'Vibe Descriptor': 'vibe_descriptor',
+  'Host Guest ID': 'host_guest_id',
+  'Status': 'status',
 };
 
 const DINNER_QUERY = `
@@ -117,7 +145,7 @@ export async function fetchDinner(id: string): Promise<Dinner> {
 
   // Fetch invitations
   const invitationsResult = await pool.query(`
-    SELECT i.*, g.first_name, g.last_name, g.phone
+    SELECT i.*, g.first_name, g.last_name, g.phone, g.email, g.gender
     FROM invitations i
     JOIN guests g ON g.id = i.guest_id
     WHERE i.dinner_id = $1
@@ -130,10 +158,25 @@ export async function fetchDinner(id: string): Promise<Dinner> {
     dinnerId: row.dinner_id,
     guestName: `${row.first_name || ''} ${row.last_name || ''}`.trim(),
     phone: row.phone,
+    email: row.email || null,
+    gender: row.gender || null,
     inviteSentDate: row.invite_sent_date ? new Date(row.invite_sent_date).toISOString().split('T')[0] : null,
     response: row.response,
     responseDate: row.response_date ? new Date(row.response_date).toISOString().split('T')[0] : null,
     notes: row.notes,
+    // New booking fields
+    status: row.status || null,
+    magicToken: row.magic_token || null,
+    inviteEmailSentAt: row.invite_email_sent_at ? new Date(row.invite_email_sent_at).toISOString() : null,
+    checkoutStartedAt: row.checkout_started_at ? new Date(row.checkout_started_at).toISOString() : null,
+    confirmedAt: row.confirmed_at ? new Date(row.confirmed_at).toISOString() : null,
+    cancelledAt: row.cancelled_at ? new Date(row.cancelled_at).toISOString() : null,
+    declinedAt: row.declined_at ? new Date(row.declined_at).toISOString() : null,
+    expiredAt: row.expired_at ? new Date(row.expired_at).toISOString() : null,
+    paymentIntentId: row.payment_intent_id || null,
+    pricePaidCents: row.price_paid_cents != null ? Number(row.price_paid_cents) : null,
+    refundedAmountCents: row.refunded_amount_cents != null ? Number(row.refunded_amount_cents) : null,
+    bringCategory: row.bring_category || null,
   }));
 
   // Fetch bring items with claims
@@ -180,7 +223,12 @@ export async function createDinner(fields: Partial<DinnerFields>): Promise<Dinne
 
     columns.push(column);
     placeholders.push(`$${paramIndex}`);
-    values.push(value);
+    // Serialize bring_slots as JSON
+    if (fieldName === 'Bring Slots' && typeof value === 'object') {
+      values.push(JSON.stringify(value));
+    } else {
+      values.push(value);
+    }
     paramIndex++;
   }
 
@@ -206,7 +254,12 @@ export async function updateDinner(id: string, fields: Partial<DinnerFields>): P
     if (!column) continue;
 
     setClauses.push(`${column} = $${paramIndex}`);
-    values.push(value);
+    // Serialize bring_slots as JSON
+    if (fieldName === 'Bring Slots' && typeof value === 'object') {
+      values.push(JSON.stringify(value));
+    } else {
+      values.push(value);
+    }
     paramIndex++;
   }
 

@@ -136,6 +136,18 @@ export interface DinnerFields {
   'Notes'?: string;
   'Payment Link'?: string;
   'Created Time'?: string;
+  // New booking fields
+  'Total Seats'?: number;
+  'Min Per Gender'?: number;
+  'Bring Slots'?: BringSlots;
+  'Price Cents'?: number;
+  'Parking Note'?: string;
+  'Dinner Type'?: DinnerType;
+  'Booking Cutoff At'?: string;
+  'Address'?: string;
+  'Vibe Descriptor'?: string;
+  'Host Guest ID'?: number | null;
+  'Status'?: DinnerStatus;
 }
 
 export interface Dinner {
@@ -156,11 +168,26 @@ export interface Invitation {
   dinnerId: number;
   guestName: string;
   phone: string | null;
+  email: string | null;
+  gender: string | null;
   inviteSentDate: string | null;
   response: InvitationResponse;
   responseDate: string | null;
   notes: string | null;
   guest?: Guest;
+  // New booking fields
+  status: InvitationStatus | null;
+  magicToken: string | null;
+  inviteEmailSentAt: string | null;
+  checkoutStartedAt: string | null;
+  confirmedAt: string | null;
+  cancelledAt: string | null;
+  declinedAt: string | null;
+  expiredAt: string | null;
+  paymentIntentId: string | null;
+  pricePaidCents: number | null;
+  refundedAmountCents: number | null;
+  bringCategory: string | null;
 }
 
 // Bring item types
@@ -196,4 +223,32 @@ export interface ReminderResponse {
   dinnerName: string;
   dinnerDate: string;
   reminders: GuestReminder[];
+}
+
+// Booking system types
+export type DinnerStatus = 'draft' | 'open' | 'full' | 'completed' | 'cancelled';
+export type DinnerType = 'singles_only' | 'couples_allowed';
+export type InvitationStatus = 'invited' | 'checkout_pending' | 'confirmed' | 'cancelled' | 'declined' | 'expired';
+
+export interface BringSlots {
+  wine: number;
+  appetizer: number;
+  dessert: number;
+}
+
+export interface ShortlistGuest {
+  id: number;
+  firstName: string;
+  lastName: string;
+  gender: string | null;
+  priority: number | null;
+  sparkScore: number | null;
+  soloOrCouple: string | null;
+  availableDays: string[] | null;
+  dietaryRestrictions: string[] | null;
+  dietaryNotes: string | null;
+  email: string | null;
+  lastAttendedDate: string | null;
+  lastInvitedDate: string | null;
+  bioSnippet: string | null;
 }

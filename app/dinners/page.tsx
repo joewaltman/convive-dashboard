@@ -1,32 +1,23 @@
 'use client';
 
-import { useState, useCallback, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import useSWR, { mutate } from 'swr';
+import { mutate } from 'swr';
 import Sidebar from '@/components/Sidebar';
 import DinnerList from '@/components/DinnerList';
 import DinnerCreateModal from '@/components/DinnerCreateModal';
 import Toast from '@/components/Toast';
-import type { DinnerFields, Host } from '@/lib/types';
+import type { DinnerFields } from '@/lib/types';
 
 interface ToastState {
   message: string;
   type: 'success' | 'error';
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
-
 function DinnersContent() {
   const router = useRouter();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
-
-  // Fetch hosts for the create modal
-  const { data: hostsData } = useSWR<Host[]>('/api/hosts', fetcher, {
-    revalidateOnFocus: false,
-  });
-
-  const hosts = hostsData || [];
 
   const handleCreate = async (fields: Partial<DinnerFields>) => {
     try {
@@ -72,7 +63,6 @@ function DinnersContent() {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onCreate={handleCreate}
-        hosts={hosts}
       />
 
       {toast && (
