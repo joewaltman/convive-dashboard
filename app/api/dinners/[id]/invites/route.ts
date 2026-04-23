@@ -114,7 +114,7 @@ export async function POST(
             token,
             invite_email_sent_at,
             invite_sent_date
-          ) VALUES ($1, $2, 'invited', encode(gen_random_bytes(12), 'base64url'), NOW(), CURRENT_DATE)
+          ) VALUES ($1, $2, 'invited', encode(gen_random_bytes(16), 'hex'), NOW(), CURRENT_DATE)
           RETURNING token
         `, [id, guestId]);
 
