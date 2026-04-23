@@ -25,10 +25,10 @@ function generateDinnerName(date: string, hostFirstName: string): string {
   return `${monthStr}${dayStr}_${name}`;
 }
 
-// Default booking cutoff is 2 days before dinner at 6pm
-function getDefaultCutoff(dinnerDate: string): string {
-  const date = new Date(dinnerDate + 'T18:00:00');
-  const cutoff = addDays(date, -2);
+// Default booking cutoff is 6 hours before dinner start time
+function getDefaultCutoff(dinnerDate: string, startTime: string = '18:00'): string {
+  const date = new Date(`${dinnerDate}T${startTime}:00`);
+  const cutoff = new Date(date.getTime() - 6 * 60 * 60 * 1000); // 6 hours before
   return cutoff.toISOString().slice(0, 16); // datetime-local format
 }
 
@@ -93,19 +93,21 @@ export default function DinnerCreateModal({ isOpen, onClose, onCreate }: DinnerC
       setFields(prev => ({
         ...prev,
         'Address': selectedHost.address || undefined,
+        'Location': selectedHost.address || undefined, // Also set legacy Location field
       }));
     }
   }, [selectedHost]);
 
-  // Update booking cutoff when date changes
+  // Update booking cutoff when date or time changes
   useEffect(() => {
     if (fields['Dinner Date']) {
+      const startTime = (fields['Start Time'] as string) || '18:00';
       setFields(prev => ({
         ...prev,
-        'Booking Cutoff At': getDefaultCutoff(fields['Dinner Date']!),
+        'Booking Cutoff At': getDefaultCutoff(fields['Dinner Date']!, startTime),
       }));
     }
-  }, [fields['Dinner Date']]);
+  }, [fields['Dinner Date'], fields['Start Time']]);
 
   const toggleSection = useCallback((section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));

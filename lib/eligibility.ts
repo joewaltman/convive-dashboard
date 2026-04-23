@@ -15,10 +15,9 @@ interface EligibilityOptions {
  *
  * Eligibility criteria:
  * - priority IS NOT NULL (vetted)
- * - booking_paused = FALSE
  * - available_days contains dinner day
  * - Not attended any dinner in last 14 days
- * - Not already invited to this dinner
+ * - Not already invited to this dinner (non-declined)
  * - For singles_only dinners: solo_or_couple = 'Solo'
  *
  * Ordered by priority ASC, spark_score DESC
@@ -53,7 +52,8 @@ export async function fetchEligibleGuests(options: EligibilityOptions): Promise<
       SELECT guest_id
       FROM invitations
       WHERE dinner_id = $1
-        AND status != 'declined'
+        AND (status IS NULL OR status != 'declined')
+        AND (response IS NULL OR response != 'Declined')
     )
     SELECT
       g.id,
@@ -84,13 +84,12 @@ export async function fetchEligibleGuests(options: EligibilityOptions): Promise<
       ) as last_invited_date
     FROM guests g
     WHERE g.priority IS NOT NULL
-      AND COALESCE(g.booking_paused, FALSE) = FALSE
       AND g.available_days @> ARRAY[$3]::text[]
       AND g.id NOT IN (SELECT guest_id FROM recent_attendance)
       AND g.id NOT IN (SELECT guest_id FROM already_invited)
       ${dinnerTypeClause}
       ${dietaryClause}
-    ORDER BY g.priority ASC, g.spark_score DESC NULLS LAST
+    ORDER BY g.priority ASC, spark_score DESC NULLS LAST
   `;
 
   const result = await pool.query(query, params);
