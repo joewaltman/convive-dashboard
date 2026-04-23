@@ -36,10 +36,9 @@ interface HostCandidate {
   id: number;
   firstName: string;
   lastName: string;
-  hostingInterest: string | null;
   address: string | null;
-  zipCode: string | null;
-  hasHosted: boolean;
+  city: string | null;
+  dinnerCount: number;
 }
 
 interface DinnerCreateModalProps {
@@ -132,11 +131,11 @@ export default function DinnerCreateModal({ isOpen, onClose, onCreate }: DinnerC
     if (hostId) {
       setFields(prev => ({
         ...prev,
-        'Host Guest ID': parseInt(hostId),
+        'Host ID': parseInt(hostId),
       }));
     } else {
       setFields(prev => {
-        const { 'Host Guest ID': _unused, ...rest } = prev;
+        const { 'Host ID': _unused, ...rest } = prev;
         void _unused;
         return rest;
       });
@@ -279,8 +278,8 @@ export default function DinnerCreateModal({ isOpen, onClose, onCreate }: DinnerC
                 {hostCandidates?.map(host => (
                   <option key={host.id} value={host.id}>
                     {host.firstName} {host.lastName}
-                    {host.hasHosted ? ' (hosted before)' : ''}
-                    {host.hostingInterest === 'Yes' ? ' - eager' : ''}
+                    {host.city ? ` (${host.city})` : ''}
+                    {host.dinnerCount > 0 ? ` - ${host.dinnerCount} dinners` : ''}
                   </option>
                 ))}
               </select>
