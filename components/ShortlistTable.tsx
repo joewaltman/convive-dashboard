@@ -143,7 +143,7 @@ export default function ShortlistTable({
                   />
                 </th>
                 <th className="text-left px-3 py-2 font-medium text-gray-700">Name</th>
-                <th className="text-center px-2 py-2 font-medium text-gray-700 w-12">G</th>
+                <th className="text-left px-2 py-2 font-medium text-gray-700">Gender</th>
                 <th className="text-center px-2 py-2 font-medium text-gray-700 w-12">P</th>
                 <th className="text-left px-3 py-2 font-medium text-gray-700">Solo/Couple</th>
                 <th className="text-center px-2 py-2 font-medium text-gray-700 w-12">{dinnerDayOfWeek}</th>
@@ -183,9 +183,9 @@ export default function ShortlistTable({
                           <span className="ml-1 text-xs text-red-500">(no email)</span>
                         )}
                       </td>
-                      <td className="px-2 py-2 text-center">
+                      <td className="px-2 py-2">
                         <span className="text-gray-600">
-                          {guest.gender === 'Male' ? 'M' : guest.gender === 'Female' ? 'F' : '--'}
+                          {guest.gender || '--'}
                         </span>
                       </td>
                       <td className="px-2 py-2 text-center">

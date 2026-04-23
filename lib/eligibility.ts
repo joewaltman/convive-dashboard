@@ -84,6 +84,7 @@ export async function fetchEligibleGuests(options: EligibilityOptions): Promise<
       ) as last_invited_date
     FROM guests g
     WHERE g.priority IS NOT NULL
+      AND g.priority < 3
       AND g.available_days @> ARRAY[$3]::text[]
       AND g.id NOT IN (SELECT guest_id FROM recent_attendance)
       AND g.id NOT IN (SELECT guest_id FROM already_invited)
