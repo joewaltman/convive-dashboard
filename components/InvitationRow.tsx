@@ -166,7 +166,7 @@ export default function InvitationRow({
 
           {showMenu && (
             <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-              {onResend && invitation.magicToken && (
+              {onResend && (invitation.token || invitation.magicToken) && (
                 <button
                   onClick={handleResend}
                   className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 first:rounded-t-lg"

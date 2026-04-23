@@ -47,9 +47,9 @@ export async function POST(
       );
     }
 
-    if (!invitation.magic_token) {
+    if (!invitation.token) {
       return NextResponse.json(
-        { error: 'Invitation has no magic token' },
+        { error: 'Invitation has no token' },
         { status: 400 }
       );
     }
@@ -62,7 +62,7 @@ export async function POST(
       : '6:00 PM';
     const priceDollars = (invitation.price_cents || 4000) / 100;
     const websiteBaseUrl = process.env.WEBSITE_BASE_URL || 'https://con-vive.com';
-    const magicLink = `${websiteBaseUrl}/booking/${invitation.magic_token}`;
+    const bookingLink = `${websiteBaseUrl}/d/${invitation.token}`;
 
     // Send email
     const emailResult = await sendEmail({
@@ -76,7 +76,7 @@ export async function POST(
         menu: invitation.menu || 'A delicious dinner prepared with care',
         vibeDescriptor: invitation.vibe_descriptor,
         priceDollars,
-        magicLink,
+        magicLink: bookingLink,
       }),
     });
 

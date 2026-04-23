@@ -166,7 +166,8 @@ export async function fetchDinner(id: string): Promise<Dinner> {
     notes: row.notes,
     // New booking fields
     status: row.status || null,
-    magicToken: row.magic_token || null,
+    token: row.token || null,
+    magicToken: row.magic_token || null, // deprecated
     inviteEmailSentAt: row.invite_email_sent_at ? new Date(row.invite_email_sent_at).toISOString() : null,
     checkoutStartedAt: row.checkout_started_at ? new Date(row.checkout_started_at).toISOString() : null,
     confirmedAt: row.confirmed_at ? new Date(row.confirmed_at).toISOString() : null,

@@ -16,7 +16,8 @@ function rowToInvitation(row: Record<string, unknown>): Invitation {
     notes: row.notes ? String(row.notes) : null,
     // New booking fields
     status: row.status ? (row.status as InvitationStatus) : null,
-    magicToken: row.magic_token ? String(row.magic_token) : null,
+    token: row.token ? String(row.token) : null,
+    magicToken: row.magic_token ? String(row.magic_token) : null, // deprecated
     inviteEmailSentAt: row.invite_email_sent_at ? new Date(row.invite_email_sent_at as string).toISOString() : null,
     checkoutStartedAt: row.checkout_started_at ? new Date(row.checkout_started_at as string).toISOString() : null,
     confirmedAt: row.confirmed_at ? new Date(row.confirmed_at as string).toISOString() : null,

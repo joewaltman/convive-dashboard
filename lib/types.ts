@@ -177,7 +177,8 @@ export interface Invitation {
   guest?: Guest;
   // New booking fields
   status: InvitationStatus | null;
-  magicToken: string | null;
+  token: string | null;
+  magicToken: string | null; // deprecated, use token
   inviteEmailSentAt: string | null;
   checkoutStartedAt: string | null;
   confirmedAt: string | null;
