@@ -17,7 +17,7 @@ export async function GET() {
 
     if (hasHostGuestId) {
       query = `
-        SELECT DISTINCT
+        SELECT
           g.id,
           g.first_name,
           g.last_name,
@@ -41,7 +41,7 @@ export async function GET() {
     } else {
       // Fallback: just use hosting_interest
       query = `
-        SELECT DISTINCT
+        SELECT
           g.id,
           g.first_name,
           g.last_name,
